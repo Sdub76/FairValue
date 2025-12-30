@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: fairvalue-app
+    volumes:
+      - .:/app
+      # Keep node_modules in the container to avoid cross-platform issues with Windows/Linux binaries if any
+      # However, for Unraid host and Linux container, it's usually fine. 
+      # Using an anonymous volume for node_modules is safer for performance and compatibility.
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    command: sh -c "npm run dev"
+    depends_on:
+      - pocketbase
+
+  pocketbase:
+    image: alpine:latest
+    container_name: fairvalue-pb
+    volumes:
+      - ./pb_data:/pb_data
+    ports:
+      - "8090:8090"
+    command: >
+      sh -c "apk add --no-cache unzip curl &&
+             curl -L https://github.com/pocketbase/pocketbase/releases/download/v0.22.3/pocketbase_0.22.3_linux_amd64.zip -o /tmp/pb.zip &&
+             unzip /tmp/pb.zip -d /usr/local/bin/ &&
+             /usr/local/bin/pocketbase serve --http=0.0.0.0:8090 --dir=/pb_data"
