@@ -6,6 +6,7 @@ import yaml from 'js-yaml'
 export interface AppConfig {
     app: {
         password?: string
+        RADAR_KEY?: string
     }
 }
 
@@ -33,7 +34,8 @@ export function getConfig(): AppConfig {
             return { app: { password: 'changeme' } }
         }
         const fileContents = fs.readFileSync(configPath, 'utf8')
-        return yaml.load(fileContents) as AppConfig
+        const parsed = yaml.load(fileContents) as AppConfig
+        return parsed
     } catch (e) {
         console.error(`Failed to read config.yaml at ${configPath}`, e)
         return { app: { password: 'changeme' } }

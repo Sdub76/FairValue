@@ -8,7 +8,8 @@ export function middleware(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/_next') ||
         request.nextUrl.pathname.startsWith('/static') ||
         request.nextUrl.pathname.startsWith('/api') || // PB pass-through if any
-        request.nextUrl.pathname === '/login'
+        request.nextUrl.pathname === '/login' ||
+        request.nextUrl.pathname.match(/\.(png|jpg|jpeg|svg|gif|ico)$/)
     ) {
         return NextResponse.next()
     }

@@ -34,7 +34,10 @@ export default async function SettingsPage() {
                     <CardHeader>
                         <CardTitle>Valuation Baseline (2024)</CardTitle>
                         <CardDescription>
-                            Total Items: {data.totalItems || 0} (Showing first 5)
+                            <div className="flex flex-col gap-1">
+                                <span className="font-medium text-foreground">Reference CPI: 313.689</span>
+                                <span>Total Items: {data.totalItems || 0} (Showing first 5)</span>
+                            </div>
                         </CardDescription>
                     </CardHeader>
                     <CardContent>

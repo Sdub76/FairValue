@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 
@@ -27,6 +28,7 @@ export default function EditDonationForm({ donation, charities, year }: { donati
                     name: formData.get('name'),
                     date: formData.get('date'),
                     charity: formData.get('charity'),
+                    notes: formData.get('notes'),
                 }),
             })
 
@@ -94,6 +96,17 @@ export default function EditDonationForm({ donation, charities, year }: { donati
                                     <option key={c.id} value={c.id}>{c.name}</option>
                                 ))}
                             </select>
+                        </div>
+
+                        <div>
+                            <Label htmlFor="notes">Notes</Label>
+                            <Textarea
+                                id="notes"
+                                name="notes"
+                                defaultValue={donation.notes || ''}
+                                placeholder="Add any additional notes about this donation..."
+                                className="mt-1"
+                            />
                         </div>
 
                         <div className="flex gap-2">

@@ -1,7 +1,7 @@
 
 import { getAdminPb } from "@/lib/pocketbase"
 import Link from "next/link"
-import { ChevronLeft, Calendar, FileText, Edit } from "lucide-react"
+import { ChevronLeft, Calendar, FileText, Edit, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { PhotoGallery } from "@/components/feature/PhotoGallery"
@@ -14,6 +14,7 @@ type Donation = {
     collectionId: string
     name: string
     date: string
+    notes?: string
     photos: string[]
     expand: {
         charity?: { name: string }
@@ -64,6 +65,7 @@ export default async function DonationPage({ params }: { params: Promise<{ year:
     if (!donation) return notFound()
 
     const taxYearCpi = donation.expand.tax_year?.target_cpi || 313.689 // Fallback
+    const isLocked = (donation.expand.tax_year as any)?.locked || false
     const totalValue = items.reduce((sum, item) => sum + item.final_value, 0)
 
     // Determine PB URL for client side images
@@ -80,7 +82,14 @@ export default async function DonationPage({ params }: { params: Promise<{ year:
                             </Button>
                         </Link>
                         <div>
-                            <h2 className="text-3xl font-bold tracking-tight break-all">{donation.name}</h2>
+                            <div className="flex items-center gap-2">
+                                <h2 className="text-3xl font-bold tracking-tight break-all">{donation.name}</h2>
+                                {isLocked && (
+                                    <div title="Tax Year Locked">
+                                        <Lock className="h-5 w-5 text-amber-500" />
+                                    </div>
+                                )}
+                            </div>
                             <div className="flex flex-wrap items-center text-muted-foreground text-sm gap-2 mt-1">
                                 <span className="flex items-center">
                                     <Calendar className="mr-1 h-3 w-3" />
@@ -91,26 +100,17 @@ export default async function DonationPage({ params }: { params: Promise<{ year:
                                     <FileText className="mr-1 h-3 w-3" />
                                     {donation.expand.charity?.name || "Unknown Charity"}
                                 </span>
-                                <Link href={`/donations/${year}/${donationId}/edit`}>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                                        <Edit className="h-3 w-3" />
-                                    </Button>
-                                </Link>
+                                {!isLocked && (
+                                    <Link href={`/donations/${year}/${donationId}/edit`}>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                                            <Edit className="h-3 w-3" />
+                                        </Button>
+                                    </Link>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
-                {items.length === 0 && (
-                    <form action={async () => {
-                        'use server'
-                        const { deleteDonationEvent } = await import('@/app/actions/delete')
-                        await deleteDonationEvent(donationId, year)
-                    }}>
-                        <Button variant="destructive" type="submit">
-                            Delete Event
-                        </Button>
-                    </form>
-                )}
             </div>
 
             <Separator />
@@ -123,24 +123,49 @@ export default async function DonationPage({ params }: { params: Promise<{ year:
                         taxYearCpi={taxYearCpi}
                         items={items}
                         totalValue={totalValue}
+                        locked={isLocked}
+                        deleteAction={!isLocked && (
+                            <form action={async () => {
+                                'use server'
+                                const { deleteDonationEvent } = await import('@/app/actions/delete')
+                                await deleteDonationEvent(donationId, year)
+                            }} className="w-full">
+                                <Button variant="destructive" type="submit" className="w-full">
+                                    Delete Event
+                                </Button>
+                            </form>
+                        )}
                     />
                 </div>
 
                 <div className="space-y-6">
+                    {/* Notes */}
+                    {donation.notes && (
+                        <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="font-semibold">Notes</h3>
+                                {!isLocked && (
+                                    <Link href={`/donations/${year}/${donationId}/edit`}>
+                                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                                            <Edit className="h-3 w-3" />
+                                        </Button>
+                                    </Link>
+                                )}
+                            </div>
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{donation.notes}</p>
+                        </div>
+                    )}
+
                     {/* Photos */}
                     <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6">
                         <PhotoGallery
                             donationId={donation.id}
                             existingPhotos={donation.photos}
                             pocketbaseUrl={pbUrl}
-                            collectionId={donation.collectionId || "donations"} // collectionId is usually on the record
-                        // record.collectionId is 'donations' or ID. SDK usually returns it.
-                        // I should verify if generic Donation type has it. Yes, PB records have collectionId.
+                            collectionId={donation.collectionId || "donations"}
+                            readOnly={isLocked}
                         />
-                        {/* We need collectionId for the image URL construction */}
                     </div>
-
-
                 </div>
             </div>
         </div>

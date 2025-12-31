@@ -9,10 +9,12 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
+import { AddressAutocomplete } from './AddressAutocomplete'
 
-export default function EditCharityForm({ charity, donations }: { charity: any, donations: any[] }) {
+export default function EditCharityForm({ charity, donations, apiKey }: { charity: any, donations: any[], apiKey?: string }) {
     const router = useRouter()
     const [loading, setLoading] = useState(false)
+    const [address, setAddress] = useState(charity.address || '')
 
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -99,16 +101,6 @@ export default function EditCharityForm({ charity, donations }: { charity: any, 
                         </div>
 
                         <div>
-                            <Label htmlFor="ein">EIN (Tax ID)</Label>
-                            <Input
-                                id="ein"
-                                name="ein"
-                                placeholder="12-3456789"
-                                defaultValue={charity.ein}
-                            />
-                        </div>
-
-                        <div>
                             <Label htmlFor="description">Description</Label>
                             <Textarea
                                 id="description"
@@ -119,10 +111,22 @@ export default function EditCharityForm({ charity, donations }: { charity: any, 
 
                         <div>
                             <Label htmlFor="address">Address</Label>
-                            <Textarea
-                                id="address"
-                                name="address"
-                                defaultValue={charity.address}
+                            {/* Headless Radar Autocomplete Integration - Replaces basic Textarea */}
+                            <input type="hidden" name="address" value={address} />
+                            <AddressAutocomplete
+                                value={address}
+                                onSelect={(addr) => setAddress(addr)}
+                                apiKey={apiKey}
+                            />
+                        </div>
+
+                        <div>
+                            <Label htmlFor="ein">EIN (Tax ID)</Label>
+                            <Input
+                                id="ein"
+                                name="ein"
+                                placeholder="12-3456789"
+                                defaultValue={charity.ein}
                             />
                         </div>
 

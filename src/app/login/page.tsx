@@ -21,7 +21,7 @@ export default function LoginPage() {
                                 id="password"
                                 name="password"
                                 type="password"
-                                placeholder="config.yaml password"
+                                placeholder="Enter password"
                                 required
                             />
                         </div>

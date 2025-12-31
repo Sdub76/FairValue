@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { useRouter } from 'next/navigation'
 import { Edit, Check, X } from 'lucide-react'
 
-export default function EditableCPI({ taxYear }: { taxYear: any }) {
+export default function EditableCPI({ taxYear, locked }: { taxYear: any, locked?: boolean }) {
     const router = useRouter()
     const [isEditing, setIsEditing] = useState(false)
     const [cpiValue, setCpiValue] = useState(taxYear.target_cpi.toString())
@@ -76,16 +76,18 @@ export default function EditableCPI({ taxYear }: { taxYear: any }) {
     return (
         <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-sm">
-                CPI: {taxYear.target_cpi} • Inflation Multiplier: {(taxYear.target_cpi / 313.689).toFixed(4)}x
+                CPI: {taxYear.target_cpi} • Reference Database Multiplier: {(taxYear.target_cpi / 313.689).toFixed(4)}x
             </span>
-            <Button
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6"
-                onClick={() => setIsEditing(true)}
-            >
-                <Edit className="h-3 w-3" />
-            </Button>
+            {!locked && (
+                <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6"
+                    onClick={() => setIsEditing(true)}
+                >
+                    <Edit className="h-3 w-3" />
+                </Button>
+            )}
         </div>
     )
 }

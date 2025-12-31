@@ -1,3 +1,4 @@
 
 app:
   password: "changeme"
+  RADAR_KEY: "your_key_here" # Get a key from https://radar.io/ 

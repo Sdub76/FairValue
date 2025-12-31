@@ -15,9 +15,10 @@ type Props = {
     existingPhotos: string[] // filenames
     pocketbaseUrl: string
     collectionId: string // donations collection ID or name?
+    readOnly?: boolean
 }
 
-export function PhotoGallery({ donationId, existingPhotos, pocketbaseUrl, collectionId }: Props) {
+export function PhotoGallery({ donationId, existingPhotos, pocketbaseUrl, collectionId, readOnly }: Props) {
     const [isUploading, setIsUploading] = useState(false)
     const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null)
 
@@ -47,20 +48,22 @@ export function PhotoGallery({ donationId, existingPhotos, pocketbaseUrl, collec
         <div className="space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-lg font-medium">Supporting Documentation</h3>
-                <div className="relative">
-                    <input
-                        type="file"
-                        multiple
-                        accept="image/*,.pdf"
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        onChange={handleUpload}
-                        disabled={isUploading}
-                    />
-                    <Button disabled={isUploading} variant="outline" size="sm">
-                        <Upload className="mr-2 h-4 w-4" />
-                        {isUploading ? "Uploading..." : "Upload"}
-                    </Button>
-                </div>
+                {!readOnly && (
+                    <div className="relative">
+                        <input
+                            type="file"
+                            multiple
+                            accept="image/*,.pdf"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                            onChange={handleUpload}
+                            disabled={isUploading}
+                        />
+                        <Button disabled={isUploading} variant="outline" size="sm">
+                            <Upload className="mr-2 h-4 w-4" />
+                            {isUploading ? "Uploading..." : "Upload"}
+                        </Button>
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -106,19 +109,21 @@ export function PhotoGallery({ donationId, existingPhotos, pocketbaseUrl, collec
                                         unoptimized
                                     />
                                 )}
-                                <div
-                                    className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex justify-end z-20"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <Button
-                                        variant="destructive"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => deletePhoto(donationId, photo)}
+                                {!readOnly && (
+                                    <div
+                                        className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex justify-end z-20"
+                                        onClick={(e) => e.stopPropagation()}
                                     >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
+                                        <Button
+                                            variant="destructive"
+                                            size="icon"
+                                            className="h-8 w-8"
+                                            onClick={() => deletePhoto(donationId, photo)}
+                                        >
+                                            <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         )
                     })

@@ -28,8 +28,8 @@ export default function NewTaxYearPage() {
                     <div className="grid gap-2">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="target_cpi">Target CPI</Label>
-                            <a href="https://www.bls.gov/cpi/tables/supplemental-files/historical-cpi-u-202410.pdf" target="_blank" className="text-xs text-primary flex items-center hover:underline">
-                                Lookup BLS Data <ExternalLink className="ml-1 h-3 w-3" />
+                            <a href="https://fred.stlouisfed.org/series/CPIAUCSL" target="_blank" className="text-xs text-primary flex items-center hover:underline">
+                                Lookup BLS Data (FRED) <ExternalLink className="ml-1 h-3 w-3" />
                             </a>
                         </div>
                         <Input id="target_cpi" name="target_cpi" type="number" step="0.001" placeholder="e.g. 315.23" required />
