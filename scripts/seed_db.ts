@@ -31,9 +31,9 @@ async function main() {
         return;
     }
 
-    // Seed items
+    // Seed items in smaller batches with delays to avoid autocancellation
     console.log(`Seeding ${items.length} items...`);
-    const batchSize = 50;
+    const batchSize = 10; // Reduced from 50
     for (let i = 0; i < items.length; i += batchSize) {
         const batch = items.slice(i, i + batchSize);
         await Promise.all(batch.map(item => {
@@ -46,6 +46,9 @@ async function main() {
             }).catch(err => console.error(`Failed to seed item: ${item.item_name}`, err));
         }));
         console.log(`Seeded ${Math.min(i + batchSize, items.length)} / ${items.length}`);
+
+        // Add small delay between batches to prevent autocancellation
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     console.log('Seeding complete.');

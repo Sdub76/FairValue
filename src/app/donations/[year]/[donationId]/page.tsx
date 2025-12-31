@@ -1,7 +1,7 @@
 
 import { getAdminPb } from "@/lib/pocketbase"
 import Link from "next/link"
-import { ChevronLeft, Calendar, FileText } from "lucide-react"
+import { ChevronLeft, Calendar, FileText, Edit } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { PhotoGallery } from "@/components/feature/PhotoGallery"
@@ -71,26 +71,46 @@ export default async function DonationPage({ params }: { params: Promise<{ year:
 
     return (
         <div className="flex-1 space-y-6">
-            <div className="flex items-center space-x-4">
-                <Link href={`/donations/${year}`}>
-                    <Button variant="ghost" size="icon">
-                        <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                </Link>
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight">{donation.name}</h2>
-                    <div className="flex items-center text-muted-foreground text-sm space-x-4">
-                        <span className="flex items-center">
-                            <Calendar className="mr-1 h-3 w-3" />
-                            {new Date(donation.date).toLocaleDateString()}
-                        </span>
-                        <span>•</span>
-                        <span className="flex items-center">
-                            <FileText className="mr-1 h-3 w-3" />
-                            {donation.expand.charity?.name || "Unknown Charity"}
-                        </span>
+            <div className="flex items-center justify-between w-full">
+                <div className="flex items-center space-x-4">
+                    <Link href={`/donations/${year}`}>
+                        <Button variant="ghost" size="icon">
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                    </Link>
+                    <div>
+                        <h2 className="text-3xl font-bold tracking-tight">{donation.name}</h2>
+                        <div className="flex items-center text-muted-foreground text-sm space-x-4">
+                            <div className="flex items-center gap-2">
+                                <span className="flex items-center">
+                                    <Calendar className="mr-1 h-3 w-3" />
+                                    {new Date(donation.date).toLocaleDateString()}
+                                </span>
+                                <span>•</span>
+                                <span className="flex items-center">
+                                    <FileText className="mr-1 h-3 w-3" />
+                                    {donation.expand.charity?.name || "Unknown Charity"}
+                                </span>
+                                <Link href={`/donations/${year}/${donationId}/edit`}>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                                        <Edit className="h-3 w-3" />
+                                    </Button>
+                                </Link>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                {items.length === 0 && (
+                    <form action={async () => {
+                        'use server'
+                        const { deleteDonationEvent } = await import('@/app/actions/delete')
+                        await deleteDonationEvent(donationId, year)
+                    }}>
+                        <Button variant="destructive" type="submit">
+                            Delete Event
+                        </Button>
+                    </form>
+                )}
             </div>
 
             <Separator />

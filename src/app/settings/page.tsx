@@ -33,7 +33,7 @@ export default async function SettingsPage() {
                     <CardHeader>
                         <CardTitle>Valuation Baseline (2024)</CardTitle>
                         <CardDescription>
-                            Total Items: {data.totalItems}
+                            Total Items: {data.totalItems || 0} (Showing first 5)
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
