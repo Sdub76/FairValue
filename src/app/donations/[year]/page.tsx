@@ -91,10 +91,10 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
                     </Button>
                 </Link>
                 <div className="flex-1">
-                    <h2 className="text-3xl font-bold tracking-tight">{year} Donations</h2>
+                    <h2 className="text-4xl font-bold tracking-tight">{year} Donations</h2>
                     <EditableCPI taxYear={taxYear} />
-                    <p className="text-sm font-medium mt-1">
-                        {totalDonations} {totalDonations === 1 ? 'event' : 'events'} • Total Value: ${totalValue.toFixed(2)}
+                    <p className="text-xl font-medium mt-2 text-muted-foreground">
+                        {totalDonations} {totalDonations === 1 ? 'event' : 'events'} • Total Value: <span className="text-foreground">${totalValue.toFixed(2)}</span>
                     </p>
                 </div>
                 <div className="flex gap-2">
@@ -138,13 +138,13 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
                                 <Card className="hover:border-primary transition-colors cursor-pointer h-full">
                                     <CardHeader className="pb-2">
                                         <div className="flex justify-between items-start">
-                                            <CardTitle className="text-lg font-medium">{d.name}</CardTitle>
-                                            <span className="text-xs font-mono bg-secondary px-2 py-1 rounded">
+                                            <CardTitle className="text-2xl font-bold">{d.name}</CardTitle>
+                                            <span className="text-sm font-mono bg-secondary px-2 py-1 rounded">
                                                 {new Date(d.date).toLocaleDateString()}
                                             </span>
                                         </div>
-                                        <CardDescription className="flex items-center mt-1">
-                                            <Calendar className="mr-1 h-3 w-3" />
+                                        <CardDescription className="flex items-center mt-2 text-base">
+                                            <Calendar className="mr-2 h-4 w-4" />
                                             {d.expand?.charity?.name || "Unknown Charity"}
                                         </CardDescription>
                                     </CardHeader>

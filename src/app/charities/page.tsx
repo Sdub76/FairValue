@@ -64,7 +64,7 @@ export default async function CharitiesPage() {
     return (
         <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between space-y-2">
-                <h2 className="text-3xl font-bold tracking-tight">Charities</h2>
+                <h2 className="text-4xl font-bold tracking-tight">Charities & Organizations</h2>
                 <div className="flex items-center space-x-2">
                     <Link href="/charities/new">
                         <Button>
@@ -85,25 +85,25 @@ export default async function CharitiesPage() {
                         <Link key={charity.id} href={`/charities/${charity.id}/edit`}>
                             <Card className="hover:border-primary transition-colors cursor-pointer">
                                 <CardHeader className="pb-2">
-                                    <CardTitle className="text-sm font-medium">
+                                    <CardTitle className="text-2xl font-bold">
                                         {charity.name}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="text-xs text-muted-foreground mb-2">
+                                    <div className="text-base text-muted-foreground mb-2">
                                         {charity.ein || "No EIN"}
                                     </div>
-                                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                                    <p className="text-base text-muted-foreground line-clamp-2 mb-3">
                                         {charity.description || "No description"}
                                     </p>
                                     {Object.keys(charity.yearlyTotals || {}).length > 0 && (
-                                        <div className="text-xs space-y-1 pt-2 border-t">
+                                        <div className="text-base space-y-1 pt-2 border-t">
                                             {Object.entries(charity.yearlyTotals)
                                                 .sort(([a], [b]) => parseInt(b as string) - parseInt(a as string))
                                                 .map(([year, total]: [string, any]) => (
                                                     <div key={year} className="flex justify-between">
                                                         <span className="text-muted-foreground">{year}:</span>
-                                                        <span className="font-medium">${total.toFixed(2)}</span>
+                                                        <span className="font-medium font-mono">${total.toFixed(2)}</span>
                                                     </div>
                                                 ))}
                                         </div>
