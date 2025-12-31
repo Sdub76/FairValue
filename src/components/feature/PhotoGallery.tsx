@@ -3,9 +3,10 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Trash2, Upload, Image as ImageIcon } from "lucide-react"
-import { uploadPhoto, deletePhoto } from "@/app/actions/photos" // We need to create this
+import { Trash2, Upload, Image as ImageIcon, X } from "lucide-react"
+import { uploadPhoto, deletePhoto } from "@/app/actions/photos"
 import Image from "next/image"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 
 type Props = {
     donationId: string
@@ -16,6 +17,7 @@ type Props = {
 
 export function PhotoGallery({ donationId, existingPhotos, pocketbaseUrl, collectionId }: Props) {
     const [isUploading, setIsUploading] = useState(false)
+    const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null)
 
     async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
         if (!e.target.files?.length) return
@@ -67,14 +69,22 @@ export function PhotoGallery({ donationId, existingPhotos, pocketbaseUrl, collec
                     </div>
                 ) : (
                     existingPhotos.map((photo) => (
-                        <div key={photo} className="relative aspect-square rounded-md overflow-hidden group border bg-muted">
+                        <div
+                            key={photo}
+                            className="relative aspect-square rounded-md overflow-hidden group border bg-muted cursor-pointer"
+                            onClick={() => setSelectedPhoto(photo)}
+                        >
                             <Image
                                 src={`${pocketbaseUrl}/api/files/${collectionId}/${donationId}/${photo}?thumb=200x200`}
                                 alt="Evidence"
                                 fill
-                                className="object-cover"
+                                className="object-cover transition-transform hover:scale-105"
+                                unoptimized
                             />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <div
+                                className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex justify-end"
+                                onClick={(e) => e.stopPropagation()}
+                            >
                                 <Button
                                     variant="destructive"
                                     size="icon"
@@ -88,6 +98,32 @@ export function PhotoGallery({ donationId, existingPhotos, pocketbaseUrl, collec
                     ))
                 )}
             </div>
+
+            <Dialog open={!!selectedPhoto} onOpenChange={(open) => !open && setSelectedPhoto(null)}>
+                <DialogContent className="max-w-4xl w-full p-0 overflow-hidden bg-transparent border-none shadow-none">
+                    <div className="relative w-full h-[80vh] flex items-center justify-center pointer-events-none">
+                        <div className="relative w-full h-full pointer-events-auto">
+                            {selectedPhoto && (
+                                <Image
+                                    src={`${pocketbaseUrl}/api/files/${collectionId}/${donationId}/${selectedPhoto}`}
+                                    alt="Evidence Full Size"
+                                    fill
+                                    className="object-contain"
+                                    unoptimized
+                                />
+                            )}
+                            <Button
+                                variant="secondary"
+                                size="icon"
+                                className="absolute top-4 right-4 rounded-full opacity-70 hover:opacity-100"
+                                onClick={() => setSelectedPhoto(null)}
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

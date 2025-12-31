@@ -7,6 +7,15 @@ export async function uploadPhoto(formData: FormData) {
     const donationId = formData.get("donationId") as string
     const files = formData.getAll("photos")
 
+    console.log(`Received ${files.length} files for donation ${donationId}`)
+    files.forEach((f) => {
+        if (f instanceof File) {
+            console.log(`- File: ${f.name} (${f.size} bytes, ${f.type})`)
+        } else {
+            console.log(`- Not a file:`, f)
+        }
+    })
+
     if (!donationId || !files.length) return
 
     try {
@@ -34,18 +43,17 @@ export async function uploadPhoto(formData: FormData) {
 
         const existingPhotos = record.photos || []
 
-        // We can't mix strings (filenames) and File objects in the same FormData field easily for simple submission?
-        // Actually we can append multiple values to same key.
-
-        // However, `pb.collection().update()` SDK helper handles this?
-        // "If you want to keep the already uploaded files, you don't have to send them again." -> This implies default is KEEP.
-        // "Currently there is no way to append files to an existing file field without reuploading the old ones OR sending the file names of the old ones." -> Contradictory?
-        // Let's try simple update with new files. If it wipes old ones, I will implement logic to include old names.
+        // Append existing filenames so they are not deleted (PB requires re-sending names to keep them)
+        if (Array.isArray(existingPhotos)) {
+            existingPhotos.forEach((filename: any) => {
+                formData.append("photos", filename)
+            })
+        }
 
         await pb.collection("donations").update(donationId, formData)
 
     } catch (error) {
-        console.error("Photo upload failed", error)
+        console.error("Photo upload failed:", JSON.stringify(error, null, 2))
         throw new Error("Failed to upload photo")
     }
 
