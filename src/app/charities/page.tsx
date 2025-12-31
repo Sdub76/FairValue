@@ -4,6 +4,7 @@ import Link from "next/link"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { formatCurrency } from "@/lib/utils"
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -103,7 +104,7 @@ export default async function CharitiesPage() {
                                                 .map(([year, total]: [string, any]) => (
                                                     <div key={year} className="flex justify-between">
                                                         <span className="text-muted-foreground">{year}:</span>
-                                                        <span className="font-medium font-mono">${total.toFixed(2)}</span>
+                                                        <span className="font-medium font-mono">{formatCurrency(total)}</span>
                                                     </div>
                                                 ))}
                                         </div>

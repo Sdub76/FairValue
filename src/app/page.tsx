@@ -3,6 +3,7 @@ import { getAdminPb } from "@/lib/pocketbase"
 import Link from "next/link"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { formatCurrency } from "@/lib/utils"
 
 // Types (should be in separate file ideally)
 type TaxYear = {
@@ -83,7 +84,7 @@ export default async function DashboardPage() {
                   <h3 className="text-2xl font-bold tracking-tight">Tax Year {ty.year}</h3>
                   <p className="text-sm text-muted-foreground">Target CPI: {ty.target_cpi}</p>
                   <div className="pt-2 border-t mt-2">
-                    <p className="text-lg font-semibold text-primary">${ty.totalValue?.toFixed(2) || '0.00'}</p>
+                    <p className="text-lg font-semibold text-primary">{formatCurrency(ty.totalValue || 0)}</p>
                     <p className="text-xs text-muted-foreground">{ty.donationCount || 0} donation events</p>
                   </div>
                 </div>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { notFound } from "next/navigation"
 import EditableCPI from "@/components/feature/EditableCPI"
+import { formatCurrency } from "@/lib/utils"
 
 // Force dynamic
 export const dynamic = 'force-dynamic'
@@ -94,7 +95,7 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
                     <h2 className="text-4xl font-bold tracking-tight">{year} Donations</h2>
                     <EditableCPI taxYear={taxYear} />
                     <p className="text-xl font-medium mt-2 text-muted-foreground">
-                        {totalDonations} {totalDonations === 1 ? 'event' : 'events'} • Total Value: <span className="text-foreground">${totalValue.toFixed(2)}</span>
+                        {totalDonations} {totalDonations === 1 ? 'event' : 'events'} • Total Value: <span className="text-foreground">{formatCurrency(totalValue)}</span>
                     </p>
                 </div>
                 <div className="flex gap-2">
