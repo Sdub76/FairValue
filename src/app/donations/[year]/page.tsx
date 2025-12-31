@@ -19,7 +19,11 @@ async function getTaxYear(year: string) {
         const yearNum = parseInt(year)
         const record = await pb.collection('tax_years').getFirstListItem(`year=${yearNum}`)
         return record
-    } catch (e) {
+    } catch (e: any) {
+        // Don't log 404s as errors, just return null
+        if (e.status === 404) {
+            return null
+        }
         console.error('Failed to get tax year:', e)
         return null
     }
