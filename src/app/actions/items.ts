@@ -10,10 +10,12 @@ export async function addDatabaseItem(donationId: string, taxYearCpi: number, fo
     const name = formData.get("name") as string
     const category = formData.get("category") as string
     const quantity = parseInt(formData.get("quantity") as string) || 1
+    const quality = formData.get("quality") as string || "Good"
     const value_low = parseFloat(formData.get("value_low") as string) || 0
     const value_high = parseFloat(formData.get("value_high") as string) || 0
-    // We store the 2024 baseline value as the average of low/high
-    const baseline_value = (value_low + value_high) / 2
+
+    // value_high already contains the selected quality's baseline value
+    const baseline_value = value_high
 
     // Calculate final value
     // Formula: Baseline * (YearCPI / BaselineCPI) * Quantity
@@ -28,9 +30,10 @@ export async function addDatabaseItem(donationId: string, taxYearCpi: number, fo
             name,
             category,
             quantity,
-            condition: "Medium", // Default
+            quality,  // Store quality in database
             baseline_value,
-            value_type: "Database",
+            value_mode: "database",
+            unit_value: unitValue,
             final_value: final_value.toFixed(2), // Store as fixed decimals
         })
     } catch (e) {
@@ -69,6 +72,26 @@ export async function addCustomItem(donationId: string, formData: FormData) {
     revalidatePath("/donations")
 }
 
+export async function addCashItem(donationId: string, amount: number, description: string) {
+    try {
+        const pb = await getAdminPb()
+        await pb.collection("donation_items").create({
+            donation: donationId,
+            name: description || "Cash Donation",
+            category: "Cash",
+            quantity: 1,
+            value_mode: "cash",
+            unit_value: amount,
+            final_value: amount.toFixed(2),
+        })
+    } catch (e) {
+        console.error("Add cash item failed", e)
+        throw new Error("Failed to add cash item")
+    }
+
+    revalidatePath("/donations")
+}
+
 export async function deleteItem(id: string) {
     try {
         const pb = await getAdminPb()
@@ -100,24 +123,23 @@ export async function updateItemQuantity(itemId: string, quantity: number) {
     revalidatePath(`/donations`)
 }
 
-export async function updateItemValue(itemId: string, unitValue: number, valueNote?: string) {
+export async function updateItemValue(itemId: string, customValue: number, valueNote: string) {
     try {
         const pb = await getAdminPb()
         const item = await pb.collection('donation_items').getOne(itemId)
 
-        // Calculate final value based on quantity and new unit value
-        const final_value = unitValue * item.quantity
+        // Calculate new final value
+        const new_final_value = customValue * item.quantity
 
         await pb.collection('donation_items').update(itemId, {
-            value_type: 'Custom',
-            custom_value: unitValue, // Store the unit value
-            value_note: valueNote || '',
-            final_value: final_value.toFixed(2)
+            unit_value: customValue,
+            final_value: new_final_value.toFixed(2),
+            value_note: valueNote,
+            value_mode: "custom"  // Mark as custom when manually edited
         })
     } catch (e) {
-        console.error('Update value failed', e)
-        throw new Error('Failed to update value')
+        console.error("Update value failed", e)
+        throw new Error("Failed to update value")
     }
-
-    revalidatePath(`/donations`)
+    revalidatePath("/donations")
 }

@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Trash2, Plus, Search, Edit2 } from "lucide-react"
-import { deleteItem, addCustomItem, addDatabaseItem, updateItemQuantity, updateItemValue } from "@/app/actions/items"
+import { deleteItem, addCustomItem, addDatabaseItem, updateItemQuantity, updateItemValue, addCashItem } from "@/app/actions/items"
 import { cn } from "@/lib/utils"
 import { searchBaseline, getBaselineCategories, getItemsByCategory } from "@/app/actions/search"
 
@@ -97,16 +97,16 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
 
     async function handleAddDatabase(item: any, quality: "medium" | "high") {
         const formData = new FormData()
-        // Append quality to name
-        const qualitySuffix = quality === "high" ? "(Qual: High)" : "(Qual: Med)"
-        formData.append("name", `${item.name} ${qualitySuffix}`)
+        // Don't append quality to name - store it separately
+        formData.append("name", item.name)
 
         formData.append("category", item.category)
         // Use selected quality to determine which baseline value to use
-        const baselineValue = quality === "high" ? item.value_high_2024 : (item.value_low_2024 + item.value_high_2024) / 2
+        const baselineValue = quality === "high" ? item.value_high_2024 : item.value_low_2024
         formData.append("value_low", item.value_low_2024.toString())
-        formData.append("value_high", quality === "high" ? item.value_high_2024.toString() : ((item.value_low_2024 + item.value_high_2024) / 2).toString())
+        formData.append("value_high", quality === "high" ? item.value_high_2024.toString() : item.value_low_2024.toString())
         formData.append("quantity", "1")
+        formData.append("quality", quality === "high" ? "High" : "Medium") // Map to schema values
 
         await addDatabaseItem(donationId, taxYearCpi, formData)
         setIsOpen(false)
@@ -142,6 +142,16 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
         setEditingItem(null)
     }
 
+    async function handleAddCash(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault()
+        const formData = new FormData(e.currentTarget)
+        const amount = parseFloat(formData.get('cash_amount') as string)
+        const description = formData.get('cash_description') as string
+
+        await addCashItem(donationId, amount, description)
+        setIsOpen(false)
+    }
+
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -158,9 +168,10 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
                             <DialogTitle>Add Donation Item</DialogTitle>
                         </DialogHeader>
                         <Tabs defaultValue="database" className="w-full">
-                            <TabsList className="grid w-full grid-cols-2">
+                            <TabsList className="grid w-full grid-cols-3">
                                 <TabsTrigger value="database">Database Search</TabsTrigger>
                                 <TabsTrigger value="custom">Custom Item</TabsTrigger>
+                                <TabsTrigger value="cash">Cash</TabsTrigger>
                             </TabsList>
                             <TabsContent value="database" className="space-y-4 pt-4">
                                 <div className="space-y-4">
@@ -202,7 +213,7 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
                                         {searchResults.length > 0 && (
                                             <div className="mt-2 max-h-[200px] overflow-y-auto border rounded-md">
                                                 {searchResults.map((res) => {
-                                                    const baseline = selectedQuality === "high" ? res.value_high_2024 : (res.value_low_2024 + res.value_high_2024) / 2
+                                                    const baseline = selectedQuality === "high" ? res.value_high_2024 : res.value_low_2024
                                                     return (
                                                         <div
                                                             key={res.id}
@@ -264,7 +275,7 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
                                                 >
                                                     <option value="">Select an item...</option>
                                                     {categoryItems.map((item: any) => {
-                                                        const baseline = selectedQuality === "high" ? item.value_high_2024 : (item.value_low_2024 + item.value_high_2024) / 2
+                                                        const baseline = selectedQuality === "high" ? item.value_high_2024 : item.value_low_2024
                                                         return (
                                                             <option key={item.id} value={item.id}>
                                                                 {item.name} (${getInflatedValue(baseline)})
@@ -307,6 +318,19 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
                                         Valuation will be calculated at 30% of Purchase Price.
                                     </p>
                                     <Button type="submit" className="w-full">Add Custom Item</Button>
+                                </form>
+                            </TabsContent>
+                            <TabsContent value="cash" className="space-y-4 pt-4">
+                                <form onSubmit={handleAddCash} className="space-y-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="cash_description">Description (optional)</Label>
+                                        <Input id="cash_description" name="cash_description" placeholder="e.g., Cash donation" />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="cash_amount">Amount</Label>
+                                        <Input id="cash_amount" name="cash_amount" type="number" step="0.01" required placeholder="$0.00" />
+                                    </div>
+                                    <Button type="submit" className="w-full">Add Cash Donation</Button>
                                 </form>
                             </TabsContent>
                         </Tabs>
@@ -352,14 +376,16 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
                                     </TableCell>
                                     <TableCell>
                                         <div>{item.name}</div>
-                                        <div className="text-xs text-muted-foreground">{item.category}</div>
+                                        <div className="text-xs text-muted-foreground">
+                                            {item.category}{item.quality ? `, Qual: ${item.quality}` : ''}
+                                        </div>
                                         {item.value_note && (
                                             <div className="text-xs text-muted-foreground italic mt-1">
                                                 Note: {item.value_note}
                                             </div>
                                         )}
                                     </TableCell>
-                                    <TableCell className="text-xs">{item.value_type}</TableCell>
+                                    <TableCell className="text-xs capitalize">{item.value_mode}</TableCell>
                                     <TableCell className="text-right font-mono text-muted-foreground">
                                         ${(item.quantity > 0 ? item.final_value / item.quantity : 0).toFixed(2)}
                                     </TableCell>
@@ -417,13 +443,14 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
                             />
                         </div>
                         <div>
-                            <Label htmlFor="value_note">Note (Optional)</Label>
+                            <Label htmlFor="value_note">Valuation Note (Required for IRS)</Label>
                             <Textarea
                                 id="value_note"
                                 name="value_note"
                                 placeholder="Explain why you adjusted the value..."
                                 defaultValue={editingItem?.value_note || ""}
                                 rows={3}
+                                required
                             />
                         </div>
                         <div className="flex gap-2">

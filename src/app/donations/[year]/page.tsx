@@ -149,7 +149,7 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
                                             ${totalValue.toFixed(2)}
                                         </div>
                                         <div className="text-xs text-muted-foreground mt-1">
-                                            {d.donation_items?.length || 0} items
+                                            {d.donation_items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) || 0} items
                                         </div>
                                     </CardContent>
                                 </Card>

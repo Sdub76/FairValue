@@ -18,13 +18,15 @@ async function getCharities() {
             const donations = await pb.collection('donations').getFullList({
                 filter: `charity="${charity.id}"`,
                 expand: 'tax_year',
+                requestKey: `charity-${charity.id}` // Unique key to prevent auto-cancellation
             })
 
             // Fetch items for each donation in smaller batches
             const donationsWithItems = []
             for (const donation of donations) {
                 const items = await pb.collection('donation_items').getFullList({
-                    filter: `donation="${donation.id}"`
+                    filter: `donation="${donation.id}"`,
+                    requestKey: `donation-items-${donation.id}` // Unique key to prevent auto-cancellation
                 })
                 donationsWithItems.push({
                     ...donation,

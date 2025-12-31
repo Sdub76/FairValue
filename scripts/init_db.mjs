@@ -131,10 +131,10 @@ async function setupSchema() {
             { name: 'value', type: 'number' },
             { name: 'unit_value', type: 'number' },
             { name: 'final_value', type: 'number' },
-            { name: 'value_mode', type: 'select', values: ['database', 'custom'], maxSelect: 1 },
+            { name: 'value_mode', type: 'select', values: ['database', 'custom', 'cash'], maxSelect: 1 },
             { name: 'donation', type: 'relation', collectionId: donationsId, cascadeDelete: true, maxSelect: 1 },
             { name: 'category', type: 'text' },
-            { name: 'quality', type: 'select', values: ['Excellent', 'Good', 'Fair', 'Poor'], maxSelect: 1 },
+            { name: 'quality', type: 'select', values: ['High', 'Medium'], maxSelect: 1 },
             { name: 'custom_value', type: 'number' },
             { name: 'value_note', type: 'text' }
         ],
@@ -195,7 +195,7 @@ async function seedData() {
     try {
         // First, check what the actual schema looks like
         const donationsCollection = await pb.collections.getOne('donations');
-        const taxYearField = donationsCollection.schema.find(f => f.name === 'tax_year');
+        const taxYearField = donationsCollection.fields.find(f => f.name === 'tax_year');
         console.log(`[Init] Donations.tax_year field config:`, JSON.stringify(taxYearField));
 
         const ty = await pb.collection('tax_years').getFirstListItem('year=2025');

@@ -1,7 +1,8 @@
 
 # FairValue
 
-**Fair Market Value Interface for Goodwill Items**
+**Fair Market Value Interface for Donated Items**
+*Intended to build on the sunset capabilities of "It's Deductible"*
 
 A robust, containerized application for generating itemized donation receipts with fair market item valuations. Built with **Next.js** and **PocketBase**.
 

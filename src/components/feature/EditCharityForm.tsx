@@ -158,7 +158,7 @@ export default function EditCharityForm({ charity, donations }: { charity: any, 
                                 </thead>
                                 <tbody>
                                     {donations.map((donation: any) => {
-                                        const totalItems = donation.donation_items?.length || 0
+                                        const totalItems = donation.donation_items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) || 0
                                         const totalValue = donation.donation_items?.reduce((sum: number, item: any) =>
                                             sum + (parseFloat(item.final_value) || 0), 0) || 0
 

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Trash2, Upload, Image as ImageIcon, X } from "lucide-react"
 import { uploadPhoto, deletePhoto } from "@/app/actions/photos"
 import Image from "next/image"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 
 type Props = {
     donationId: string
@@ -101,6 +101,7 @@ export function PhotoGallery({ donationId, existingPhotos, pocketbaseUrl, collec
 
             <Dialog open={!!selectedPhoto} onOpenChange={(open) => !open && setSelectedPhoto(null)}>
                 <DialogContent className="max-w-4xl w-full p-0 overflow-hidden bg-transparent border-none shadow-none">
+                    <DialogTitle className="sr-only">Photo Gallery</DialogTitle>
                     <div className="relative w-full h-[80vh] flex items-center justify-center pointer-events-none">
                         <div className="relative w-full h-full pointer-events-auto">
                             {selectedPhoto && (
