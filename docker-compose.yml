@@ -1,32 +1,18 @@
-version: '3.8'
-
 services:
-  app:
+  fairvalue:
     build: .
-    container_name: fairvalue-app
+    container_name: fairvalue
     volumes:
       - .:/app
-      # Keep node_modules in the container to avoid cross-platform issues with Windows/Linux binaries if any
-      # However, for Unraid host and Linux container, it's usually fine. 
-      # Using an anonymous volume for node_modules is safer for performance and compatibility.
-      - /app/node_modules
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-    command: sh -c "npm run dev"
-    depends_on:
-      - pocketbase
-
-  pocketbase:
-    image: alpine:latest
-    container_name: fairvalue-pb
-    volumes:
       - ./pb_data:/pb_data
     ports:
-      - "8090:8090"
-    command: >
-      sh -c "apk add --no-cache unzip curl &&
-             curl -L https://github.com/pocketbase/pocketbase/releases/download/v0.22.3/pocketbase_0.22.3_linux_amd64.zip -o /tmp/pb.zip &&
-             unzip /tmp/pb.zip -d /usr/local/bin/ &&
-             /usr/local/bin/pocketbase serve --http=0.0.0.0:8090 --dir=/pb_data"
+      - "23000:3000" # Next.js
+      - "28090:8090" # Pocketbase
+    environment:
+      # For client-side, we need to know the public URL of PB
+      - NEXT_PUBLIC_POCKETBASE_URL=http://yellowstone:28090
+      # For server-side, we can use localhost since they are in the same container now
+      - POCKETBASE_INTERNAL_URL=http://127.0.0.1:8090
+      # Admin credentials for server-side authentication
+      - PB_ADMIN_EMAIL=admin@fairvalue.app
+      - PB_ADMIN_PASSWORD=1234567890
