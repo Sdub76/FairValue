@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/pb_data
+/config/config.yaml
+
+# scratchpad scripts
+scripts/debug_*
+scripts/test_*
+scripts/check_*
+scripts/update_schema_*

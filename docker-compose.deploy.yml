@@ -1,0 +1,11 @@
+services:
+  fairvalue:
+    image: fairvalue:latest
+    container_name: fairvalue
+    restart: unless-stopped
+    volumes:
+      # Data persistence
+      - ./pb_data:/pb_data
+      - ./config:/config
+    ports:
+      - "23000:3000" # Next.js

@@ -9,22 +9,20 @@ export async function changePassword(formData: FormData) {
     const currentPassword = formData.get('currentPassword') as string
     const newPassword = formData.get('newPassword') as string
 
-    const configPath = path.join(process.cwd(), 'config', 'config.yaml')
-
     try {
-        const fileContents = fs.readFileSync(configPath, 'utf8')
-        const data = yaml.load(fileContents) as any
+        const { getConfig, updateConfig } = await import('@/lib/config')
+        const config = getConfig()
 
         // Verify current password
-        if (data?.app?.password !== currentPassword) {
+        if (config.app?.password !== currentPassword) {
             return { error: 'Current password is incorrect' }
         }
 
         // Update password
-        data.app.password = newPassword
+        config.app.password = newPassword
 
         // Write back to file
-        fs.writeFileSync(configPath, yaml.dump(data), 'utf8')
+        updateConfig(config)
 
         revalidatePath('/settings')
         return { success: true }

@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# FairValue
 
-First, run the development server:
+**Fair Market Value Interface for Goodwill Items**
 
+A robust, containerized application for generating itemized donation receipts with fair market item valuations. Built with **Next.js** and **PocketBase**.
+
+## 🚀 Quick Start (Production)
+
+This application is designed to be "Zero-Config" for deployment.
+
+### 1. Build the Image
+The image contains the application code. Run this on your development machine:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+docker build -t fairvalue:latest .
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Deploy
+Use the deployment compose file. It relies on the image you just built and maps the configuration to your host.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+docker compose -f docker-compose.deploy.yml up -d
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Initialize
+On the first run, the container will automatically:
+1.  Create a default configuration file at `./config/config.yaml` (if mapped).
+2.  Initialize the PocketBase database at `./pb_data` (if mapped).
+3.  Seed the database with baseline valuation data.
 
-## Learn More
+**Login credentials for the app are found in `/config/config.yaml`.**
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠️ Development
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+To develop locally with hot-reloading:
 
-## Deploy on Vercel
+```bash
+# This maps the local source code into the container
+docker compose up -d
+```
+Access the app at `http://localhost:3000`.
+Access PocketBase Admin at `http://localhost:8090/_/`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📂 Project Structure
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+-   **`/src`**: Next.js application source code.
+-   **`/config`**: Configuration files (persistent).
+-   **`/pb_data`**: Database files (persistent).
+-   **`/scripts`**: Initialization and utility scripts.
+    -   `entrypoint.sh`: Main container startup script.
+    -   `init_db.mjs`: Database seeding logic.
+
+## 🔑 Configuration
+
+The application uses a centralized config file:
+`config/config.yaml`
+
+```yaml
+app:
+  password: "changeme" # Application-level password
+```
+
+## 🐳 Architecture
+
+-   **Next.js 15**: Frontend and Server Actions.
+-   **PocketBase**: Backend, Auth, and Database (SQLite).
+-   **Proxy**: Internal rewrite `/pb` -> `127.0.0.1:8090` ensures the app is network-agnostic.
+-   **Container**: Self-contained image with automated initialization.

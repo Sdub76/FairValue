@@ -5,6 +5,7 @@ services:
     volumes:
       - .:/app
       - ./pb_data:/pb_data
+      - ./config:/config
     ports:
       - "23000:3000" # Next.js
       - "28090:8090" # Pocketbase

@@ -9,19 +9,9 @@ import yaml from 'js-yaml'
 export async function login(formData: FormData) {
     const password = formData.get('password') as string
 
-    // Read config.yaml
-    const configPath = path.join(process.cwd(), 'config', 'config.yaml')
-    let configPassword = 'changeme'
-
-    try {
-        const fileContents = fs.readFileSync(configPath, 'utf8')
-        const data = yaml.load(fileContents) as any
-        if (data?.app?.password) {
-            configPassword = data.app.password
-        }
-    } catch (e) {
-        console.error("Failed to read config.yaml", e)
-    }
+    const { getConfig } = await import('@/lib/config')
+    const config = getConfig()
+    const configPassword = config.app?.password || 'changeme'
 
     if (password === configPassword) {
         const cookieStore = await cookies()
