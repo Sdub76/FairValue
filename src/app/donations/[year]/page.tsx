@@ -85,23 +85,24 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
 
     return (
         <div className="flex-1 space-y-4">
-            <div className="flex items-center space-x-4 mb-6">
-                <Link href="/">
-                    <Button variant="ghost" size="icon">
-                        <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                </Link>
-                <div className="flex-1">
-                    <h2 className="text-4xl font-bold tracking-tight">{year} Donations</h2>
-                    <EditableCPI taxYear={taxYear} />
-                    <p className="text-xl font-medium mt-2 text-muted-foreground">
-                        {totalDonations} {totalDonations === 1 ? 'event' : 'events'} • Total Value: <span className="text-foreground">{formatCurrency(totalValue)}</span>
-                    </p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                    <Link href="/">
+                        <Button variant="ghost" size="icon">
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                    </Link>
+                    <div className="flex-1">
+                        <h2 className="text-4xl font-bold tracking-tight">{year} Donations</h2>
+                        <p className="text-xl font-medium mt-2 text-muted-foreground">
+                            {totalDonations} {totalDonations === 1 ? 'event' : 'events'} • Total Value: <span className="text-foreground">{formatCurrency(totalValue)}</span>
+                        </p>
+                    </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full md:w-auto">
                     <PDFDownloadButton year={year} />
                     <Link href={`/donations/${year}/new`}>
-                        <Button>
+                        <Button className="w-full md:w-auto">
                             <Plus className="mr-2 h-4 w-4" />
                             Add Event
                         </Button>
@@ -151,7 +152,7 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
                                     </CardHeader>
                                     <CardContent>
                                         <div className="text-sm font-semibold text-primary">
-                                            ${totalValue.toFixed(2)}
+                                            {formatCurrency(totalValue)}
                                         </div>
                                         <div className="text-xs text-muted-foreground mt-1">
                                             {d.donation_items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) || 0} items

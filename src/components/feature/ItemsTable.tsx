@@ -154,11 +154,11 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h3 className="text-lg font-medium">Itemization</h3>
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
                     <DialogTrigger asChild>
-                        <Button>
+                        <Button className="w-full md:w-auto">
                             <Plus className="mr-2 h-4 w-4" />
                             Add Item
                         </Button>
