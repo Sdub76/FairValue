@@ -32,20 +32,20 @@ export function MainNav() {
     ]
 
     return (
-        <nav className="flex items-center space-x-4 lg:space-x-6">
+        <nav className="flex items-center space-x-1 md:space-x-4 lg:space-x-6">
             {routes.map((route) => (
                 <Link
                     key={route.href}
                     href={route.href}
                     className={cn(
-                        "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2 px-3 py-2 rounded-md",
+                        "text-sm font-medium transition-colors hover:text-primary flex items-center gap-2 px-2 md:px-3 py-2 rounded-md",
                         route.active
                             ? "text-primary bg-secondary/50"
                             : "text-muted-foreground"
                     )}
                 >
                     <route.icon className="h-4 w-4" />
-                    {route.label}
+                    <span className="hidden md:inline">{route.label}</span>
                 </Link>
             ))}
         </nav>
