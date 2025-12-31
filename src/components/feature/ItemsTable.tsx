@@ -32,9 +32,10 @@ type Props = {
     taxYearCpi: number
     items: Item[]
     totalValue: number
+    locked?: boolean
 }
 
-export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props) {
+export function ItemsTable({ donationId, taxYearCpi, items, totalValue, locked }: Props) {
     const [isOpen, setIsOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
     const [searchResults, setSearchResults] = useState<any[]>([])
@@ -159,12 +160,14 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h3 className="text-lg font-medium">Itemization</h3>
                 <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="w-full md:w-auto">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Item
-                        </Button>
-                    </DialogTrigger>
+                    {!locked && (
+                        <DialogTrigger asChild>
+                            <Button className="w-full md:w-auto">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add Item
+                            </Button>
+                        </DialogTrigger>
+                    )}
                     <DialogContent className="sm:max-w-[600px]">
                         <DialogHeader>
                             <DialogTitle>Add Donation Item</DialogTitle>
@@ -396,20 +399,24 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
                                     <TableCell className="text-right p-2">
                                         <div className="flex items-center justify-end gap-0">
                                             <span className="font-mono text-xs mr-1">{formatCurrency(item.final_value, false)}</span>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-6 w-6"
-                                                onClick={() => {
-                                                    setEditingItem(item)
-                                                    setEditValueDialogOpen(true)
-                                                }}
-                                            >
-                                                <Edit2 className="h-3 w-3" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => deleteItem(item.id)}>
-                                                <Trash2 className="h-3 w-3" />
-                                            </Button>
+                                            {!locked && (
+                                                <>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-6 w-6"
+                                                        onClick={() => {
+                                                            setEditingItem(item)
+                                                            setEditValueDialogOpen(true)
+                                                        }}
+                                                    >
+                                                        <Edit2 className="h-3 w-3" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => deleteItem(item.id)}>
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </Button>
+                                                </>
+                                            )}
                                         </div>
                                     </TableCell>
                                 </TableRow>

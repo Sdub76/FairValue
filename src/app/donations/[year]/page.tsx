@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { notFound } from "next/navigation"
 import EditableCPI from "@/components/feature/EditableCPI"
 import { formatCurrency } from "@/lib/utils"
+// @ts-ignore
+import { TaxYearLockToggle } from "@/components/feature/TaxYearLockToggle"
 
 // Force dynamic
 export const dynamic = 'force-dynamic'
@@ -97,25 +99,34 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
                         </Button>
                     </Link>
                     <div className="flex-1">
-                        <h2 className="text-4xl font-bold tracking-tight">{year} Donations</h2>
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-4xl font-bold tracking-tight">{year} Donations</h2>
+                            <TaxYearLockToggle
+                                taxYearId={taxYear.id}
+                                year={parseInt(year)}
+                                initialLocked={taxYear.locked || false}
+                            />
+                        </div>
                         <p className="text-xl font-medium mt-2 text-muted-foreground">
                             {totalDonations} {totalDonations === 1 ? 'event' : 'events'} • Total Value: <span className="text-foreground">{formatCurrency(totalValue)}</span>
                         </p>
                         <div className="mt-2">
-                            <EditableCPI taxYear={taxYear} />
+                            <EditableCPI taxYear={taxYear} locked={taxYear.locked} />
                         </div>
                     </div>
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
                     <PDFDownloadButton year={year} />
-                    <Link href={`/donations/${year}/new`}>
-                        <Button className="w-full md:w-auto">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Event
-                        </Button>
-                    </Link>
+                    {!taxYear.locked && (
+                        <Link href={`/donations/${year}/new`}>
+                            <Button className="w-full md:w-auto">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add Event
+                            </Button>
+                        </Link>
+                    )}
                 </div>
-                {totalDonations === 0 && (
+                {totalDonations === 0 && !taxYear.locked && (
                     <form action={async () => {
                         'use server'
                         const { deleteTaxYear } = await import('@/app/actions/delete')

@@ -5,6 +5,7 @@ import '@/app/globals.css'
 import { cn } from '@/lib/utils'
 import { SiteHeader } from "@/components/layout/site-header"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/sonner"
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -36,6 +37,7 @@ export default function RootLayout({
               {children}
             </div>
           </div>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

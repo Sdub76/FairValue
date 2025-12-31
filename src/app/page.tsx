@@ -1,7 +1,6 @@
-
 import { getAdminPb } from "@/lib/pocketbase"
 import Link from "next/link"
-import { Plus } from "lucide-react"
+import { Plus, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { formatCurrency } from "@/lib/utils"
 
@@ -10,6 +9,7 @@ type TaxYear = {
   id: string
   year: number
   target_cpi: number
+  locked?: boolean
 }
 
 // Force dynamic rendering to ensure data is fresh
@@ -79,9 +79,16 @@ export default async function DashboardPage() {
         ) : (
           taxYears.map((ty: any) => (
             <Link key={ty.id} href={`/donations/${ty.year}`}>
-              <div className="rounded-xl border bg-card text-card-foreground shadow-sm hover:border-primary transition-colors cursor-pointer">
+              <div className="rounded-xl border bg-card text-card-foreground shadow-sm hover:border-primary transition-colors cursor-pointer relative">
                 <div className="p-6 flex flex-col space-y-2">
-                  <h3 className="text-2xl font-bold tracking-tight">Tax Year {ty.year}</h3>
+                  <div className="flex justify-between items-start">
+                    <h3 className="text-2xl font-bold tracking-tight">Tax Year {ty.year}</h3>
+                    {ty.locked && (
+                      <div title="Locked">
+                        <Lock className="h-5 w-5 text-amber-500" />
+                      </div>
+                    )}
+                  </div>
                   <div className="pt-2 border-t mt-2">
                     <p className="text-lg font-semibold text-primary">{formatCurrency(ty.totalValue || 0)}</p>
                     <p className="text-xs text-muted-foreground">{ty.donationCount || 0} donation events</p>

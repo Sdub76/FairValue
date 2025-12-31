@@ -97,6 +97,7 @@ async function setupSchema() {
         schema: [
             { name: 'year', type: 'number', required: true },
             { name: 'target_cpi', type: 'number', required: true },
+            { name: 'locked', type: 'bool' },
             { name: 'archived', type: 'bool' },
             { name: 'notes', type: 'text' }
         ],
