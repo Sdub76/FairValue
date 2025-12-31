@@ -76,7 +76,7 @@ export default function EditableCPI({ taxYear }: { taxYear: any }) {
     return (
         <div className="flex items-center gap-2">
             <span className="text-muted-foreground text-sm">
-                CPI: {taxYear.target_cpi} • Inflation Multiplier: {(taxYear.target_cpi / 313.689).toFixed(4)}x
+                CPI: {taxYear.target_cpi} • Reference Database Multiplier: {(taxYear.target_cpi / 313.689).toFixed(4)}x
             </span>
             <Button
                 size="icon"

@@ -101,6 +101,9 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
                         <p className="text-xl font-medium mt-2 text-muted-foreground">
                             {totalDonations} {totalDonations === 1 ? 'event' : 'events'} • Total Value: <span className="text-foreground">{formatCurrency(totalValue)}</span>
                         </p>
+                        <div className="mt-2">
+                            <EditableCPI taxYear={taxYear} />
+                        </div>
                     </div>
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">

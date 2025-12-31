@@ -14,6 +14,7 @@ type Donation = {
     collectionId: string
     name: string
     date: string
+    notes?: string
     photos: string[]
     expand: {
         charity?: { name: string }
@@ -127,6 +128,21 @@ export default async function DonationPage({ params }: { params: Promise<{ year:
                 </div>
 
                 <div className="space-y-6">
+                    {/* Notes */}
+                    {donation.notes && (
+                        <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="font-semibold">Notes</h3>
+                                <Link href={`/donations/${year}/${donationId}/edit`}>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                                        <Edit className="h-3 w-3" />
+                                    </Button>
+                                </Link>
+                            </div>
+                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{donation.notes}</p>
+                        </div>
+                    )}
+
                     {/* Photos */}
                     <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6">
                         <PhotoGallery
