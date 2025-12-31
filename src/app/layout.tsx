@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 import '@/app/globals.css'
 import { cn } from '@/lib/utils'
 import { SiteHeader } from "@/components/layout/site-header"
+import { ThemeProvider } from "@/components/theme-provider"
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -23,13 +24,19 @@ export default function RootLayout({
         "min-h-screen bg-background font-sans antialiased",
         inter.variable
       )}>
-        {/* Placeholder for Theme Provider */}
-        <div className="relative flex min-h-screen flex-col">
-          <SiteHeader />
-          <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-            {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <div className="relative flex min-h-screen flex-col">
+            <SiteHeader />
+            <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+              {children}
+            </div>
           </div>
-        </div>
+        </ThemeProvider>
       </body>
     </html>
   )

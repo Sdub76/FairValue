@@ -344,10 +344,10 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[50px] px-2 text-center">Qty</TableHead>
-                            <TableHead className="w-full">Item</TableHead>
-                            <TableHead className="text-right whitespace-nowrap px-2">Unit Value</TableHead>
-                            <TableHead className="text-right whitespace-nowrap px-2">Total Value</TableHead>
+                            <TableHead className="w-[50px] md:w-[8%] px-2 text-center">Qty</TableHead>
+                            <TableHead className="w-full md:w-[40%]">Item</TableHead>
+                            <TableHead className="text-right whitespace-nowrap px-2 md:w-[20%]">Unit Value</TableHead>
+                            <TableHead className="text-right whitespace-nowrap px-2 md:w-[20%]">Total Value</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>

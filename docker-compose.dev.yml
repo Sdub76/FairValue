@@ -18,3 +18,5 @@ services:
       # We just need Admin creds to potentially init setup, though existing dev db likely has them.
       - PB_ADMIN_EMAIL=admin@fairvalue.app
       - PB_ADMIN_PASSWORD=1234567890
+      # Critical: Override Dockerfile's production setting to ensure devDependencies (TS, Tailwind) install
+      - NODE_ENV=development

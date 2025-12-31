@@ -7,7 +7,7 @@ export function SiteHeader() {
             <div className="container flex h-auto py-4 items-center justify-between">
                 <div className="flex items-center">
                     <a className="mr-6 flex items-center space-x-2" href="/">
-                        <img src="/logo.png" alt="FairValue" className="h-20 md:h-24 w-auto object-contain rounded-lg" />
+                        <img src="/logo.png" alt="FairValue" className="h-20 md:h-24 w-auto object-contain rounded-lg bg-slate-950 p-2" />
                     </a>
                 </div>
                 <MainNav />
