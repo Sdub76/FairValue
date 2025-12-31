@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Trash2, Plus, Search, Edit2 } from "lucide-react"
 import { deleteItem, addCustomItem, addDatabaseItem, updateItemQuantity, updateItemValue, addCashItem } from "@/app/actions/items"
 import { cn, formatCurrency } from "@/lib/utils"
@@ -33,9 +34,10 @@ type Props = {
     items: Item[]
     totalValue: number
     locked?: boolean
+    deleteAction?: React.ReactNode
 }
 
-export function ItemsTable({ donationId, taxYearCpi, items, totalValue, locked }: Props) {
+export function ItemsTable({ donationId, taxYearCpi, items, totalValue, locked, deleteAction }: Props) {
     const [isOpen, setIsOpen] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
     const [searchResults, setSearchResults] = useState<any[]>([])
@@ -48,7 +50,7 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue, locked }
     const [selectedItem, setSelectedItem] = useState<any>(null)
 
     // Quality selector
-    const [selectedQuality, setSelectedQuality] = useState<"medium" | "high">("medium")
+    const [selectedQuality, setSelectedQuality] = useState<"medium" | "high">("high")
 
     // Value edit dialog
     const [editValueDialogOpen, setEditValueDialogOpen] = useState(false)
@@ -157,190 +159,213 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue, locked }
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h3 className="text-lg font-medium">Itemization</h3>
-                <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                    {!locked && (
-                        <DialogTrigger asChild>
-                            <Button className="w-full md:w-auto">
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add Item
-                            </Button>
-                        </DialogTrigger>
-                    )}
-                    <DialogContent className="sm:max-w-[600px]">
-                        <DialogHeader>
-                            <DialogTitle>Add Donation Item</DialogTitle>
-                        </DialogHeader>
-                        <Tabs defaultValue="database" className="w-full">
-                            <TabsList className="grid w-full grid-cols-3">
-                                <TabsTrigger value="database">Database Search</TabsTrigger>
-                                <TabsTrigger value="custom">Custom Item</TabsTrigger>
-                                <TabsTrigger value="cash">Cash</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="database" className="space-y-4 pt-4">
-                                <div className="space-y-4">
-                                    {/* Quality Selector */}
-                                    <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
-                                        <Label className="text-sm font-medium">Quality:</Label>
-                                        <div className="flex gap-2">
-                                            <Button
-                                                type="button"
-                                                variant={selectedQuality === "medium" ? "default" : "outline"}
-                                                size="sm"
-                                                onClick={() => setSelectedQuality("medium")}
-                                            >
-                                                Medium
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                variant={selectedQuality === "high" ? "default" : "outline"}
-                                                size="sm"
-                                                onClick={() => setSelectedQuality("high")}
-                                            >
-                                                High
-                                            </Button>
-                                        </div>
-                                    </div>
-
-                                    {/* Search Box */}
-                                    <div>
-                                        <Label className="text-sm mb-2 block">Search by Name</Label>
-                                        <div className="relative">
-                                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                            <Input
-                                                placeholder="Search items (e.g. Sweater, Desk)..."
-                                                className="pl-8"
-                                                value={searchTerm}
-                                                onChange={(e) => handleSearch(e.target.value)}
-                                            />
-                                        </div>
-                                        {searchResults.length > 0 && (
-                                            <div className="mt-2 max-h-[200px] overflow-y-auto border rounded-md">
-                                                {searchResults.map((res) => {
-                                                    const baseline = selectedQuality === "high" ? res.value_high_2024 : res.value_low_2024
-                                                    return (
-                                                        <div
-                                                            key={res.id}
-                                                            className="flex items-center justify-between p-3 hover:bg-accent cursor-pointer border-b last:border-0"
-                                                            onClick={() => handleAddDatabase(res, selectedQuality)}
-                                                        >
-                                                            <div>
-                                                                <div className="font-medium">{res.name}</div>
-                                                                <div className="text-xs text-muted-foreground">{res.category}</div>
-                                                            </div>
-                                                            <div className="text-sm font-mono">
-                                                                ${getInflatedValue(baseline)}
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                })}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="relative">
-                                        <div className="absolute inset-0 flex items-center">
-                                            <span className="w-full border-t" />
-                                        </div>
-                                        <div className="relative flex justify-center text-xs uppercase">
-                                            <span className="bg-background px-2 text-muted-foreground">Or browse by category</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Category/Item Dropdown Selectors */}
-                                    <div className="space-y-3">
-                                        <div>
-                                            <Label className="text-sm mb-2 block">Category</Label>
-                                            <select
-                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                                value={selectedCategory}
-                                                onChange={(e) => {
-                                                    setSelectedCategory(e.target.value)
-                                                    setSelectedItem(null)
-                                                }}
-                                            >
-                                                <option value="">Select a category...</option>
-                                                {categories.map((cat) => (
-                                                    <option key={cat} value={cat}>{cat}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        {selectedCategory && (
-                                            <div>
-                                                <Label className="text-sm mb-2 block">Item</Label>
-                                                <select
-                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                                    value={selectedItem?.id || ""}
-                                                    onChange={(e) => {
-                                                        const item = categoryItems.find(i => i.id === e.target.value)
-                                                        setSelectedItem(item)
-                                                    }}
+            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                <h3 className="text-lg font-medium self-center md:self-auto">Itemization</h3>
+                <div className="flex flex-col gap-2 w-full md:w-auto min-w-[140px]">
+                    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                        {!locked && (
+                            <DialogTrigger asChild>
+                                <Button className="w-full">
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Item
+                                </Button>
+                            </DialogTrigger>
+                        )}
+                        <DialogContent className="sm:max-w-[600px]">
+                            <DialogHeader>
+                                <DialogTitle>Add Donation Item</DialogTitle>
+                            </DialogHeader>
+                            <Tabs defaultValue="database" className="w-full">
+                                <TabsList className="grid w-full grid-cols-3">
+                                    <TabsTrigger value="database">Database Search</TabsTrigger>
+                                    <TabsTrigger value="custom">Custom Item</TabsTrigger>
+                                    <TabsTrigger value="cash">Cash</TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="database" className="space-y-4 pt-4">
+                                    <div className="space-y-4">
+                                        {/* Quality Selector */}
+                                        <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+                                            <Label className="text-sm font-medium">Quality:</Label>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    type="button"
+                                                    variant={selectedQuality === "high" ? "default" : "outline"}
+                                                    size="sm"
+                                                    onClick={() => setSelectedQuality("high")}
                                                 >
-                                                    <option value="">Select an item...</option>
-                                                    {categoryItems.map((item: any) => {
-                                                        const baseline = selectedQuality === "high" ? item.value_high_2024 : item.value_low_2024
+                                                    High
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant={selectedQuality === "medium" ? "default" : "outline"}
+                                                    size="sm"
+                                                    onClick={() => setSelectedQuality("medium")}
+                                                >
+                                                    Medium
+                                                </Button>
+                                                <TooltipProvider delayDuration={0}>
+                                                    <Tooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <span tabIndex={0} className="cursor-not-allowed">
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    disabled
+                                                                    className="opacity-50 pointer-events-none"
+                                                                >
+                                                                    Low
+                                                                </Button>
+                                                            </span>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent>
+                                                            <p>Low quality items are not deductible per IRS guidelines</p>
+                                                        </TooltipContent>
+                                                    </Tooltip>
+                                                </TooltipProvider>
+                                            </div>
+                                        </div>
+
+                                        {/* Search Box */}
+                                        <div>
+                                            <Label className="text-sm mb-2 block">Search by Name</Label>
+                                            <div className="relative">
+                                                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                                <Input
+                                                    placeholder="Search items (e.g. Sweater, Desk)..."
+                                                    className="pl-8"
+                                                    value={searchTerm}
+                                                    onChange={(e) => handleSearch(e.target.value)}
+                                                />
+                                            </div>
+                                            {searchResults.length > 0 && (
+                                                <div className="mt-2 max-h-[200px] overflow-y-auto border rounded-md">
+                                                    {searchResults.map((res) => {
+                                                        const baseline = selectedQuality === "high" ? res.value_high_2024 : res.value_low_2024
                                                         return (
-                                                            <option key={item.id} value={item.id}>
-                                                                {item.name} (${getInflatedValue(baseline)})
-                                                            </option>
+                                                            <div
+                                                                key={res.id}
+                                                                className="flex items-center justify-between p-3 hover:bg-accent cursor-pointer border-b last:border-0"
+                                                                onClick={() => handleAddDatabase(res, selectedQuality)}
+                                                            >
+                                                                <div>
+                                                                    <div className="font-medium">{res.name}</div>
+                                                                    <div className="text-xs text-muted-foreground">{res.category}</div>
+                                                                </div>
+                                                                <div className="text-sm font-mono">
+                                                                    ${getInflatedValue(baseline)}
+                                                                </div>
+                                                            </div>
                                                         )
                                                     })}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="relative">
+                                            <div className="absolute inset-0 flex items-center">
+                                                <span className="w-full border-t" />
+                                            </div>
+                                            <div className="relative flex justify-center text-xs uppercase">
+                                                <span className="bg-background px-2 text-muted-foreground">Or browse by category</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Category/Item Dropdown Selectors */}
+                                        <div className="space-y-3">
+                                            <div>
+                                                <Label className="text-sm mb-2 block">Category</Label>
+                                                <select
+                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                    value={selectedCategory}
+                                                    onChange={(e) => {
+                                                        setSelectedCategory(e.target.value)
+                                                        setSelectedItem(null)
+                                                    }}
+                                                >
+                                                    <option value="">Select a category...</option>
+                                                    {categories.map((cat) => (
+                                                        <option key={cat} value={cat}>{cat}</option>
+                                                    ))}
                                                 </select>
                                             </div>
-                                        )}
 
-                                        {selectedItem && (
-                                            <Button
-                                                type="button"
-                                                className="w-full"
-                                                onClick={() => handleAddDatabase(selectedItem, selectedQuality)}
-                                            >
-                                                Add {selectedItem.name}
-                                            </Button>
-                                        )}
+                                            {selectedCategory && (
+                                                <div>
+                                                    <Label className="text-sm mb-2 block">Item</Label>
+                                                    <select
+                                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                        value={selectedItem?.id || ""}
+                                                        onChange={(e) => {
+                                                            const item = categoryItems.find(i => i.id === e.target.value)
+                                                            setSelectedItem(item)
+                                                        }}
+                                                    >
+                                                        <option value="">Select an item...</option>
+                                                        {categoryItems.map((item: any) => {
+                                                            const baseline = selectedQuality === "high" ? item.value_high_2024 : item.value_low_2024
+                                                            return (
+                                                                <option key={item.id} value={item.id}>
+                                                                    {item.name} (${getInflatedValue(baseline)})
+                                                                </option>
+                                                            )
+                                                        })}
+                                                    </select>
+                                                </div>
+                                            )}
+
+                                            {selectedItem && (
+                                                <Button
+                                                    type="button"
+                                                    className="w-full"
+                                                    onClick={() => handleAddDatabase(selectedItem, selectedQuality)}
+                                                >
+                                                    Add {selectedItem.name}
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            </TabsContent>
-                            <TabsContent value="custom" className="space-y-4 pt-4">
-                                <form onSubmit={handleAddCustom} className="space-y-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="c_name">Item Name</Label>
-                                        <Input id="c_name" name="name" required placeholder="Description..." />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                                </TabsContent>
+                                <TabsContent value="custom" className="space-y-4 pt-4">
+                                    <form onSubmit={handleAddCustom} className="space-y-4">
                                         <div className="grid gap-2">
-                                            <Label htmlFor="c_price">Purchase Price</Label>
-                                            <Input id="c_price" name="purchase_price" type="number" step="0.01" required placeholder="$0.00" />
+                                            <Label htmlFor="c_name">Item Name</Label>
+                                            <Input id="c_name" name="name" required placeholder="Description..." />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="c_price">Purchase Price</Label>
+                                                <Input id="c_price" name="purchase_price" type="number" step="0.01" required placeholder="$0.00" />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label htmlFor="c_qty">Quantity</Label>
+                                                <Input id="c_qty" name="quantity" type="number" defaultValue="1" required />
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground">
+                                            Valuation is estimated at 30% of Purchase Price. Please verify this against resale outlets (e.g. thrift stores) to ensure accuracy.
+                                        </p>
+                                        <Button type="submit" className="w-full">Add Custom Item</Button>
+                                    </form>
+                                </TabsContent>
+                                <TabsContent value="cash" className="space-y-4 pt-4">
+                                    <form onSubmit={handleAddCash} className="space-y-4">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="cash_description">Description (optional)</Label>
+                                            <Input id="cash_description" name="cash_description" placeholder="e.g., Cash donation" />
                                         </div>
                                         <div className="grid gap-2">
-                                            <Label htmlFor="c_qty">Quantity</Label>
-                                            <Input id="c_qty" name="quantity" type="number" defaultValue="1" required />
+                                            <Label htmlFor="cash_amount">Amount</Label>
+                                            <Input id="cash_amount" name="cash_amount" type="number" step="0.01" required placeholder="$0.00" />
                                         </div>
-                                    </div>
-                                    <p className="text-xs text-muted-foreground">
-                                        Valuation will be calculated at 30% of Purchase Price.
-                                    </p>
-                                    <Button type="submit" className="w-full">Add Custom Item</Button>
-                                </form>
-                            </TabsContent>
-                            <TabsContent value="cash" className="space-y-4 pt-4">
-                                <form onSubmit={handleAddCash} className="space-y-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="cash_description">Description (optional)</Label>
-                                        <Input id="cash_description" name="cash_description" placeholder="e.g., Cash donation" />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="cash_amount">Amount</Label>
-                                        <Input id="cash_amount" name="cash_amount" type="number" step="0.01" required placeholder="$0.00" />
-                                    </div>
-                                    <Button type="submit" className="w-full">Add Cash Donation</Button>
-                                </form>
-                            </TabsContent>
-                        </Tabs>
-                    </DialogContent>
-                </Dialog>
+                                        <Button type="submit" className="w-full">Add Cash Donation</Button>
+                                    </form>
+                                </TabsContent>
+                            </Tabs>
+                        </DialogContent>
+                    </Dialog>
+                    {deleteAction}
+                </div>
             </div>
 
             <div className="rounded-md border">

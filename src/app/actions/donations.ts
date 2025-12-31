@@ -35,6 +35,7 @@ export async function createDonation(taxYearId: string, year: string, formData: 
     const name = formData.get("name") as string
     const date = formData.get("date") as string
     const charityId = formData.get("charityId") as string
+    const notes = formData.get("notes") as string
 
     if (!name || !date || !charityId) {
         throw new Error("Missing required fields")
@@ -48,6 +49,7 @@ export async function createDonation(taxYearId: string, year: string, formData: 
             date,
             charity: charityId,
             tax_year: taxYearId,
+            notes,
         })
     } catch (error) {
         console.error("Create donation failed", error)

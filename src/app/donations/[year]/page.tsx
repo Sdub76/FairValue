@@ -115,28 +115,28 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
                         </div>
                     </div>
                 </div>
-                <div className="flex gap-2 w-full md:w-auto">
+                <div className="flex flex-col gap-2 w-full md:w-auto min-w-[140px]">
                     <PDFDownloadButton year={year} />
                     {!taxYear.locked && (
-                        <Link href={`/donations/${year}/new`}>
-                            <Button className="w-full md:w-auto">
+                        <Link href={`/donations/${year}/new`} className="w-full">
+                            <Button className="w-full">
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add Event
                             </Button>
                         </Link>
                     )}
+                    {totalDonations === 0 && !taxYear.locked && (
+                        <form action={async () => {
+                            'use server'
+                            const { deleteTaxYear } = await import('@/app/actions/delete')
+                            await deleteTaxYear(year)
+                        }} className="w-full">
+                            <Button variant="destructive" type="submit" className="w-full">
+                                Delete Tax Year
+                            </Button>
+                        </form>
+                    )}
                 </div>
-                {totalDonations === 0 && !taxYear.locked && (
-                    <form action={async () => {
-                        'use server'
-                        const { deleteTaxYear } = await import('@/app/actions/delete')
-                        await deleteTaxYear(year)
-                    }}>
-                        <Button variant="destructive" type="submit">
-                            Delete Tax Year
-                        </Button>
-                    </form>
-                )}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

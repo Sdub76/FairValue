@@ -1,3 +1,4 @@
+
 import { getAdminPb } from "@/lib/pocketbase"
 import Link from "next/link"
 import { ChevronLeft, Calendar, FileText, Edit, Lock } from "lucide-react"
@@ -110,17 +111,6 @@ export default async function DonationPage({ params }: { params: Promise<{ year:
                         </div>
                     </div>
                 </div>
-                {items.length === 0 && !isLocked && (
-                    <form action={async () => {
-                        'use server'
-                        const { deleteDonationEvent } = await import('@/app/actions/delete')
-                        await deleteDonationEvent(donationId, year)
-                    }}>
-                        <Button variant="destructive" type="submit">
-                            Delete Event
-                        </Button>
-                    </form>
-                )}
             </div>
 
             <Separator />
@@ -134,6 +124,17 @@ export default async function DonationPage({ params }: { params: Promise<{ year:
                         items={items}
                         totalValue={totalValue}
                         locked={isLocked}
+                        deleteAction={!isLocked && (
+                            <form action={async () => {
+                                'use server'
+                                const { deleteDonationEvent } = await import('@/app/actions/delete')
+                                await deleteDonationEvent(donationId, year)
+                            }} className="w-full">
+                                <Button variant="destructive" type="submit" className="w-full">
+                                    Delete Event
+                                </Button>
+                            </form>
+                        )}
                     />
                 </div>
 

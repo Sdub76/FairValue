@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label"
 import { createDonation } from "@/app/actions/donations"
 import { ChevronLeft } from "lucide-react"
 
-// Force dynamic
+import { Textarea } from "@/components/ui/textarea"
+
 export const dynamic = 'force-dynamic'
 
 async function getCharities() {
@@ -80,6 +81,11 @@ export default async function NewDonationPage({ params }: { params: Promise<{ ye
                         <div className="text-xs text-muted-foreground">
                             Don't see it? <Link href="/charities/new" className="underline text-primary">Add new charity</Link>
                         </div>
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="notes">Notes (optional)</Label>
+                        <Textarea id="notes" name="notes" placeholder="Add any initial notes about this donation..." />
                     </div>
                 </div>
 
