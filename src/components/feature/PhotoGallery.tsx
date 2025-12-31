@@ -45,8 +45,8 @@ export function PhotoGallery({ donationId, existingPhotos, pocketbaseUrl, collec
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Evidence Gallery</h3>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-lg font-medium">Supporting Documentation</h3>
                 <div className="relative">
                     <input
                         type="file"
@@ -58,7 +58,7 @@ export function PhotoGallery({ donationId, existingPhotos, pocketbaseUrl, collec
                     />
                     <Button disabled={isUploading} variant="outline" size="sm">
                         <Upload className="mr-2 h-4 w-4" />
-                        {isUploading ? "Uploading..." : "Upload Photos"}
+                        {isUploading ? "Uploading..." : "Upload"}
                     </Button>
                 </div>
             </div>

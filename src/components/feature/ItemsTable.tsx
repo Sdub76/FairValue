@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Trash2, Plus, Search, Edit2 } from "lucide-react"
 import { deleteItem, addCustomItem, addDatabaseItem, updateItemQuantity, updateItemValue, addCashItem } from "@/app/actions/items"
-import { cn } from "@/lib/utils"
+import { cn, formatCurrency } from "@/lib/utils"
 import { searchBaseline, getBaselineCategories, getItemsByCategory } from "@/app/actions/search"
 
 type Item = {
@@ -23,6 +23,8 @@ type Item = {
     value_type: string
     custom_value?: number
     value_note?: string
+    quality?: string
+    value_mode?: string
 }
 
 type Props = {
@@ -342,30 +344,28 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead className="w-[100px]">Qty</TableHead>
-                            <TableHead>Item</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead className="text-right">Unit Value</TableHead>
-                            <TableHead className="text-right">Total Value</TableHead>
-                            <TableHead className="w-[50px]"></TableHead>
+                            <TableHead className="w-[50px] px-2 text-center">Qty</TableHead>
+                            <TableHead className="w-full">Item</TableHead>
+                            <TableHead className="text-right whitespace-nowrap px-2">Unit Value</TableHead>
+                            <TableHead className="text-right whitespace-nowrap px-2">Total Value</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {items.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
+                                <TableCell colSpan={4} className="text-center py-6 text-muted-foreground">
                                     No items added yet.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             items.map((item) => (
                                 <TableRow key={item.id}>
-                                    <TableCell className="font-medium">
+                                    <TableCell className="font-medium p-2 w-[50px]">
                                         <Input
                                             type="number"
                                             min="1"
                                             defaultValue={item.quantity}
-                                            className="w-16 h-8"
+                                            className="w-10 h-7 text-xs px-1 text-center"
                                             onBlur={(e) => {
                                                 const newQty = parseInt(e.target.value)
                                                 if (newQty !== item.quantity && newQty > 0) {
@@ -385,13 +385,17 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
                                             </div>
                                         )}
                                     </TableCell>
-                                    <TableCell className="text-xs capitalize">{item.value_mode}</TableCell>
-                                    <TableCell className="text-right font-mono text-muted-foreground">
-                                        ${(item.quantity > 0 ? item.final_value / item.quantity : 0).toFixed(2)}
-                                    </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <span className="font-mono">${item.final_value.toFixed(2)}</span>
+                                        <div className="font-mono text-muted-foreground">
+                                            {formatCurrency(item.quantity > 0 ? item.final_value / item.quantity : 0, false)}
+                                        </div>
+                                        <div className="text-[10px] text-muted-foreground capitalize leading-tight">
+                                            {item.value_mode}
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-right p-2">
+                                        <div className="flex items-center justify-end gap-0">
+                                            <span className="font-mono text-xs mr-1">{formatCurrency(item.final_value, false)}</span>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
@@ -403,12 +407,10 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
                                             >
                                                 <Edit2 className="h-3 w-3" />
                                             </Button>
+                                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => deleteItem(item.id)}>
+                                                <Trash2 className="h-3 w-3" />
+                                            </Button>
                                         </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteItem(item.id)}>
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -418,9 +420,9 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
             </div>
 
             <div className="flex justify-end p-4 bg-muted/20 rounded-lg">
-                <div className="flex gap-4 items-center">
-                    <span className="text-muted-foreground font-medium">Total Estimated Value</span>
-                    <span className="text-2xl font-bold font-mono">${totalValue.toFixed(2)}</span>
+                <div className="flex gap-2 items-center">
+                    <span className="text-muted-foreground font-medium text-sm sm:text-base">Total Estimated Value</span>
+                    <span className="text-xl sm:text-2xl font-bold font-mono">{formatCurrency(totalValue)}</span>
                 </div>
             </div>
 

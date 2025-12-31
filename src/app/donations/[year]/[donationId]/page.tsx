@@ -72,21 +72,21 @@ export default async function DonationPage({ params }: { params: Promise<{ year:
     return (
         <div className="flex-1 space-y-6">
             <div className="flex items-center justify-between w-full">
-                <div className="flex items-center space-x-4">
-                    <Link href={`/donations/${year}`}>
-                        <Button variant="ghost" size="icon">
-                            <ChevronLeft className="h-4 w-4" />
-                        </Button>
-                    </Link>
-                    <div>
-                        <h2 className="text-3xl font-bold tracking-tight">{donation.name}</h2>
-                        <div className="flex items-center text-muted-foreground text-sm space-x-4">
-                            <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 w-full">
+                    <div className="flex items-start sm:items-center space-x-4">
+                        <Link href={`/donations/${year}`}>
+                            <Button variant="ghost" size="icon" className="mt-1 sm:mt-0">
+                                <ChevronLeft className="h-4 w-4" />
+                            </Button>
+                        </Link>
+                        <div>
+                            <h2 className="text-3xl font-bold tracking-tight break-all">{donation.name}</h2>
+                            <div className="flex flex-wrap items-center text-muted-foreground text-sm gap-2 mt-1">
                                 <span className="flex items-center">
                                     <Calendar className="mr-1 h-3 w-3" />
                                     {new Date(donation.date).toLocaleDateString()}
                                 </span>
-                                <span>•</span>
+                                <span className="hidden sm:inline">•</span>
                                 <span className="flex items-center">
                                     <FileText className="mr-1 h-3 w-3" />
                                     {donation.expand.charity?.name || "Unknown Charity"}
