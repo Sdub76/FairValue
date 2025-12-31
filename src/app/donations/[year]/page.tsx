@@ -2,6 +2,7 @@
 import { getAdminPb } from "@/lib/pocketbase"
 import Link from "next/link"
 import { Plus, ChevronLeft, Calendar } from "lucide-react"
+import { PDFDownloadButton } from "@/components/feature/PDFDownloadButton"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { notFound } from "next/navigation"
@@ -96,12 +97,15 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
                         {totalDonations} {totalDonations === 1 ? 'event' : 'events'} • Total Value: ${totalValue.toFixed(2)}
                     </p>
                 </div>
-                <Link href={`/donations/${year}/new`}>
-                    <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Event
-                    </Button>
-                </Link>
+                <div className="flex gap-2">
+                    <PDFDownloadButton year={year} />
+                    <Link href={`/donations/${year}/new`}>
+                        <Button>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Event
+                        </Button>
+                    </Link>
+                </div>
                 {totalDonations === 0 && (
                     <form action={async () => {
                         'use server'

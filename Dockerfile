@@ -22,7 +22,7 @@ ENV PB_ADMIN_PASSWORD=1234567890
 # but we can set a default
 # Copy and install dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm install --legacy-peer-deps
 
 # Copy application source
 COPY . .
