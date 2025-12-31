@@ -1,0 +1,20 @@
+services:
+  fairvalue:
+    build: .
+    container_name: fairvalue
+    volumes:
+      # Source Code Mapping (The "Dev" Magic)
+      # This allows you to edit files and see changes instantly (Hot Reload)
+      - .:/app
+      # Data Persistence
+      - ./pb_data:/pb_data
+      - ./config:/config
+    ports:
+      - "23000:3000" # Next.js
+      - "28090:8090" # Pocketbase (Exposed for Dev Admin Access)
+    environment:
+      # In Dev, we might want to override defaults or just use the baked ones.
+      # using baked ones is fine.
+      # We just need Admin creds to potentially init setup, though existing dev db likely has them.
+      - PB_ADMIN_EMAIL=admin@fairvalue.app
+      - PB_ADMIN_PASSWORD=1234567890
