@@ -44,7 +44,10 @@ next-env.d.ts
 /config/config.yaml
 
 # scratchpad scripts
-scripts/debug_*
-scripts/test_*
-scripts/check_*
+#scripts/debug_*
+#scripts/test_*
+#scripts/check_*
 scripts/update_schema_*
+
+_trash/
+appdata/

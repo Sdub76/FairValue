@@ -55,7 +55,14 @@ export default async function SettingsPage() {
                                 ))}
                             </TableBody>
                         </Table>
-                        <p className="text-xs text-muted-foreground mt-4">Showing top 5 items only.</p>
+                        <div className="flex items-center justify-between mt-4">
+                            <p className="text-xs text-muted-foreground">Showing top 5 items only.</p>
+                            <Button asChild variant="outline" size="sm">
+                                <a href="/api/baseline/export" download>
+                                    Export Full Baseline CSV
+                                </a>
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
 

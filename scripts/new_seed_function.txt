@@ -1,0 +1,63 @@
+// NEW seedData function to use with CSV
+async function seedData() {
+    // Read CSV file
+    const csvPath = path.join(process.cwd(), 'docs', 'itsdeductible_fmv_guide.csv');
+    if (!fs.existsSync(csvPath)) {
+        console.error('[Init] Baseline CSV not found at ' + csvPath);
+        return;
+    }
+
+    const csvContent = fs.readFileSync(csvPath, 'utf8');
+    
+    // Parse CSV: split by newlines, skip header row
+    const lines = csvContent.trim().split('\n');
+    const dataRows = lines.slice(1); // Skip header
+    
+    console.log(`[Init] Seeding ${dataRows.length} items from CSV...`);
+
+    for (const line of dataRows) {
+        // Simple CSV parser (handles quoted fields with commas)
+        const matches = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+        if (!matches || matches.length < 4) continue;
+        
+        const [category, description, highVal, medVal] = matches.map(m => m.replace(/^"|"$/g, '').trim());
+        
+        try {
+            await pb.collection('baseline_items').create({
+                name: description,
+                category: category,
+                value_low_2024: parseFloat(medVal.replace('$', '')) || 0,
+                value_high_2024: parseFloat(highVal.replace('$', '')) || 0,
+                tags: []
+            }, { requestKey: null });
+        } catch (e) {
+            // Ignore duplicates
+        }
+    }
+
+    // --- VERIFICATION STEP ---
+    console.log('[Init] Verifying Database Integrity...');
+    try {
+        const donationsCollection = await pb.collections.getOne('donations');
+        const taxYearField = donationsCollection.schema.find(f => f.name === 'tax_year');
+        console.log(`[Init] Donations.tax_year field config:`, JSON.stringify(taxYearField));
+        
+        const ty = await pb.collection('tax_years').getFirstListItem('year=2025');
+        console.log(`[Init] Found Tax Year 2025 (ID: ${ty.id})`);
+
+        try {
+            await pb.collection('donations').getList(1, 1, { filter: `tax_year="${ty.id}"` });
+            console.log('[Init] SUCCESS: "donations" relation filter works.');
+        } catch (err) {
+            console.error('[Init] FAIL: "donations" relation filter failed');
+            console.error('[Init] Error status:', err.status);
+            console.error('[Init] Error message:', err.message);
+            console.error('[Init] Error data:', JSON.stringify(err.data || err.response));
+        }
+    } catch (e) {
+        console.error('[Init] Verification Error:', e.message);
+        if (e.data || e.response) {
+            console.error('[Init] Error details:', JSON.stringify(e.data || e.response));
+        }
+    }
+}

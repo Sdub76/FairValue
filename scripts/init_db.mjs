@@ -24,14 +24,9 @@ async function main() {
         return; // Needs PB to be running!
     }
 
-    // Check if schema needs setup (check for collections)
-    try {
-        await pb.collections.getOne('baseline_items');
-        console.log('[Init] baseline_items collection exists. Skipping schema setup.');
-    } catch (e) {
-        console.log('[Init] baseline_items collection missing. Running Schema Setup...');
-        await setupSchema();
-    }
+    // ALWAYS run schema setup to ensure updates are applied
+    console.log('[Init] Running Schema Setup/Update...');
+    await setupSchema();
 
     // Check if data needs seeding (empty collection?)
     try {
@@ -50,88 +45,177 @@ async function main() {
 }
 
 async function setupSchema() {
-    // Basic Schema Setup (Simplified from setup_schema.ts)
-    // We assume the full setup_schema.ts logic is complex, so we might want to EXECUTE that script if node is available?
-    // But we are in a node environment.
-    // Let's rely on reading the existing `scripts/setup_schema.ts`? No, it's TS.
-    // I will write a minimal robust schema creator here or try to run the JS version if it exists.
-    // Actually, I should probably ensure `setup_schema.mjs` exists if I want to run it.
-    // Or just do it inline here for the critical parts.
+    // --- SCHEMA DEFINITIONS ---
 
-    // For now, let's assuming importing the logic is hard. I'll just rely on the user running it? 
-    // NO, user said "Initialize with validation training data set".
+    // Helper to create or update collection and RETURN the ID
+    async function createOrUpdate(data) {
+        let colId = null;
 
-    // I will execute `node scripts/setup_schema.js` if I can compile it? No.
-    // I will assume I need to implement basic schema creation here.
+        // Transform data: API uses 'fields' but our config uses 'schema'
+        const apiData = { ...data, fields: data.schema };
+        delete apiData.schema;
 
-    // Create baseline_items
-    try {
-        await pb.collections.create({
-            name: 'baseline_items',
-            type: 'base',
-            schema: [
-                { name: 'name', type: 'text', required: true },
-                { name: 'category', type: 'text' },
-                { name: 'value_low_2024', type: 'number' },
-                { name: 'value_high_2024', type: 'number' },
-                { name: 'tags', type: 'json' }
-            ],
-            listRule: '', viewRule: '', createRule: '', updateRule: '', deleteRule: ''
-        });
-        console.log('[Init] Created baseline_items');
-    } catch (e) { console.log('baseline_items exists? ' + e.message) }
+        try {
+            const created = await pb.collections.create(apiData);
+            console.log(`[Init] Created "${data.name}" collection (${created.id})`);
+            colId = created.id;
+        } catch (e) {
+            // If exists, update it
+            try {
+                const existing = await pb.collections.getOne(data.name);
+                colId = existing.id;
 
-    // Create donations
-    try {
-        await pb.collections.create({
-            name: 'donations',
-            type: 'base',
-            schema: [
-                { name: 'name', type: 'text', required: true },
-                { name: 'date', type: 'date', required: true },
-                { name: 'tax_year', type: 'relation', collectionId: 'tax_years', maxSelect: 1 },
-                { name: 'charity', type: 'relation', collectionId: 'charities', maxSelect: 1 },
-                // Photos field needs to be created, SDK create might be tricky for file fields schema in simple JSON?
-                // Actually PB allows it.
-            ],
-            listRule: '', viewRule: '', createRule: '', updateRule: '', deleteRule: ''
-        });
-        // We need to update photos field separately or accurately.
-        console.log('[Init] Created donations base (update schema manually if complex)');
-    } catch (e) { }
+                await pb.collections.update(existing.id, apiData);
+                console.log(`[Init] Updated/Verified "${data.name}" (${colId})`);
+            } catch (err) {
+                console.log(`[Init] Failed to ensure "${data.name}":`, err.message);
+            }
+        }
+        return colId;
+    }
 
-    // This inline approach is risky. 
-    // BETTER: Use `run_command` in entrypoint to run `setup_schema.js` if we can use a JS version?
-    // I'll stick to a "Load Baseline" focus for now as invoked by main.
+    // 1. Charities
+    const charitiesId = await createOrUpdate({
+        name: 'charities',
+        type: 'base',
+        schema: [
+            { name: 'name', type: 'text', required: true },
+            { name: 'description', type: 'text' },
+            { name: 'address', type: 'text' },
+            { name: 'city', type: 'text' },
+            { name: 'state', type: 'text' },
+            { name: 'zip', type: 'text' },
+            { name: 'ein', type: 'text' }
+        ],
+        listRule: '', viewRule: '', createRule: '', updateRule: '', deleteRule: ''
+    });
+
+    // 2. Tax Years
+    const taxYearsId = await createOrUpdate({
+        name: 'tax_years',
+        type: 'base',
+        schema: [
+            { name: 'year', type: 'number', required: true },
+            { name: 'target_cpi', type: 'number', required: true },
+            { name: 'archived', type: 'bool' },
+            { name: 'notes', type: 'text' }
+        ],
+        listRule: '', viewRule: '', createRule: '', updateRule: '', deleteRule: ''
+    });
+
+    // 3. Donations (Needs IDs from above)
+    // Note: If previous run created bad schema, the 'update' in `createOrUpdate` will try to fix it 
+    // because we are passing the NEW schema with correct IDs now.
+    const donationsId = await createOrUpdate({
+        name: 'donations',
+        type: 'base',
+        schema: [
+            { name: 'name', type: 'text', required: true },
+            { name: 'date', type: 'date', required: true },
+            { name: 'tax_year', type: 'relation', collectionId: taxYearsId, cascadeDelete: false, maxSelect: 1 },
+            { name: 'charity', type: 'relation', collectionId: charitiesId, cascadeDelete: false, maxSelect: 1 },
+            { name: 'notes', type: 'text' },
+            { name: 'photos', type: 'file', maxSelect: 10, maxSize: 52428800, mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/heic', 'image/heif'] }
+        ],
+        listRule: '', viewRule: '', createRule: '', updateRule: '', deleteRule: ''
+    });
+
+    // 4. Donation Items
+    await createOrUpdate({
+        name: 'donation_items',
+        type: 'base',
+        schema: [
+            { name: 'name', type: 'text', required: true },
+            { name: 'description', type: 'text' },
+            { name: 'quantity', type: 'number' },
+            { name: 'value', type: 'number' },
+            { name: 'unit_value', type: 'number' },
+            { name: 'final_value', type: 'number' },
+            { name: 'value_mode', type: 'select', values: ['database', 'custom'], maxSelect: 1 },
+            { name: 'donation', type: 'relation', collectionId: donationsId, cascadeDelete: true, maxSelect: 1 },
+            { name: 'category', type: 'text' },
+            { name: 'quality', type: 'select', values: ['Excellent', 'Good', 'Fair', 'Poor'], maxSelect: 1 },
+            { name: 'custom_value', type: 'number' },
+            { name: 'value_note', type: 'text' }
+        ],
+        listRule: '', viewRule: '', createRule: '', updateRule: '', deleteRule: ''
+    });
+
+    // 5. Baseline Items (Training Data)
+    await createOrUpdate({
+        name: 'baseline_items',
+        type: 'base',
+        schema: [
+            { name: 'name', type: 'text', required: true },
+            { name: 'category', type: 'text' },
+            { name: 'value_low_2024', type: 'number' },
+            { name: 'value_high_2024', type: 'number' },
+            { name: 'tags', type: 'json' }
+        ],
+        listRule: '', viewRule: '', createRule: '', updateRule: '', deleteRule: ''
+    });
 }
 
 
 async function seedData() {
-    // Read JSON
-    // We need to find the json file.
-    const jsonPath = path.join(process.cwd(), 'docs', 'valuation_baseline.json');
-    if (!fs.existsSync(jsonPath)) {
-        console.error('[Init] Baseline JSON not found at ' + jsonPath);
+    // Read CSV file
+    const csvPath = path.join(process.cwd(), 'docs', 'itsdeductible_fmv_guide.csv');
+    if (!fs.existsSync(csvPath)) {
+        console.error('[Init] Baseline CSV not found at ' + csvPath);
         return;
     }
 
-    const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-    console.log(`[Init] Seeding ${data.length} items...`);
+    const csvContent = fs.readFileSync(csvPath, 'utf8');
+    const lines = csvContent.trim().split('\n');
+    const dataRows = lines.slice(1); // Skip header
+    console.log(`[Init] Seeding ${dataRows.length} items from CSV...`);
 
-    // Batch insert
-    // ... (logic from seed_db.ts) ...
-    // Simplified batch
-    for (const item of data) {
+
+
+    // Parse CSV and insert
+    for (const line of dataRows) {
+        const matches = line.match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g);
+        if (!matches || matches.length < 4) continue;
+
+        const [category, description, highVal, medVal] = matches.map(m => m.replace(/^"|"$/g, '').trim());
+
         try {
             await pb.collection('baseline_items').create({
-                name: item.item_name,
-                category: item.category,
-                value_low_2024: item.value_low,
-                value_high_2024: item.value_high,
-                tags: item.tags
+                name: description,
+                category: category,
+                value_low_2024: parseFloat(medVal.replace('$', '')) || 0,
+                value_high_2024: parseFloat(highVal.replace('$', '')) || 0,
+                tags: []
             }, { requestKey: null });
-        } catch (e) {
-            // ignore duplicates
+        } catch (e) { /* ignore duplicates */ }
+    }
+
+    // --- VERIFICATION STEP ---
+    console.log('[Init] Verifying Database Integrity...');
+    try {
+        // First, check what the actual schema looks like
+        const donationsCollection = await pb.collections.getOne('donations');
+        const taxYearField = donationsCollection.schema.find(f => f.name === 'tax_year');
+        console.log(`[Init] Donations.tax_year field config:`, JSON.stringify(taxYearField));
+
+        const ty = await pb.collection('tax_years').getFirstListItem('year=2025');
+        console.log(`[Init] Found Tax Year 2025 (ID: ${ty.id})`);
+
+        // Test Relation Filter
+        try {
+            await pb.collection('donations').getList(1, 1, { filter: `tax_year="${ty.id}"` });
+            console.log('[Init] SUCCESS: "donations" relation filter works.');
+        } catch (err) {
+            console.error('[Init] FAIL: "donations" relation filter failed');
+            console.error('[Init] Error status:', err.status);
+            console.error('[Init] Error message:', err.message);
+            console.error('[Init] Error data:', JSON.stringify(err.data || err.response));
+            // If this fails, it often means the 'donations.tax_year' field is not a valid relation in the schema
+        }
+    } catch (e) {
+        console.error('[Init] Verification Error:', e.message);
+        if (e.data || e.response) {
+            console.error('[Init] Error details:', JSON.stringify(e.data || e.response));
         }
     }
 }

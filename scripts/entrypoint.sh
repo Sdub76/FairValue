@@ -17,7 +17,10 @@ else
     # App defaults to ./config/config.yaml
 fi
 
-# 2. Start PocketBase
+# 2. Bootstrap Admin & Start PocketBase
+echo "[Entrypoint] Bootstrapping Admin Account..."
+/usr/local/bin/pocketbase superuser upsert "$PB_ADMIN_EMAIL" "$PB_ADMIN_PASSWORD" --dir=/pb_data
+
 echo "[Entrypoint] Starting PocketBase..."
 /usr/local/bin/pocketbase serve --http=0.0.0.0:8090 --dir=/pb_data &
 PB_PID=$!
