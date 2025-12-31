@@ -22,16 +22,17 @@ async function getDonations(charityId: string) {
             expand: 'tax_year',
         })
 
-        // Fetch items for each donation
-        const donationsWithItems = await Promise.all(records.map(async (donation) => {
+        // Fetch items for each donation sequentially to avoid autocancellation
+        const donationsWithItems = []
+        for (const donation of records) {
             const items = await pb.collection('donation_items').getFullList({
                 filter: `donation="${donation.id}"`
             })
-            return {
+            donationsWithItems.push({
                 ...donation,
                 donation_items: items
-            }
-        }))
+            })
+        }
 
         return donationsWithItems
     } catch (e) {

@@ -63,8 +63,8 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
 
     // Calculate summary stats
     const totalDonations = donations.length
-    const totalValue = donations.reduce((sum, d) => {
-        const donationTotal = d.expand?.donation_items?.reduce((itemSum: number, item: any) =>
+    const totalValue = donations.reduce((sum, d: any) => {
+        const donationTotal = d.donation_items?.reduce((itemSum: number, item: any) =>
             itemSum + (parseFloat(item.final_value) || 0), 0) || 0
         return sum + donationTotal
     }, 0)
@@ -112,9 +112,9 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
                         </p>
                     </div>
                 ) : (
-                    donations.map((d) => {
+                    donations.map((d: any) => {
                         // Calculate total value for this donation
-                        const totalValue = d.expand?.donation_items?.reduce((sum: number, item: any) =>
+                        const totalValue = d.donation_items?.reduce((sum: number, item: any) =>
                             sum + (parseFloat(item.final_value) || 0), 0) || 0
 
                         return (
@@ -137,7 +137,7 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
                                             ${totalValue.toFixed(2)}
                                         </div>
                                         <div className="text-xs text-muted-foreground mt-1">
-                                            {d.expand?.donation_items?.length || 0} items
+                                            {d.donation_items?.length || 0} items
                                         </div>
                                     </CardContent>
                                 </Card>

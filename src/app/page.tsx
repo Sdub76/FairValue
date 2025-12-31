@@ -18,7 +18,33 @@ async function getTaxYears() {
   try {
     const pb = await getAdminPb()
     const records = await pb.collection('tax_years').getFullList()
-    return records as unknown as TaxYear[]
+
+    // Fetch donations sequentially to avoid autocancellation
+    const taxYearsWithTotals = []
+    for (const ty of records) {
+      const donations = await pb.collection('donations').getFullList({
+        filter: `tax_year="${ty.id}"`
+      })
+
+      // Fetch items for each donation sequentially
+      let totalValue = 0
+      for (const donation of donations) {
+        const items = await pb.collection('donation_items').getFullList({
+          filter: `donation="${donation.id}"`
+        })
+        const donationTotal = items.reduce((sum: number, item: any) =>
+          sum + (parseFloat(item.final_value) || 0), 0)
+        totalValue += donationTotal
+      }
+
+      taxYearsWithTotals.push({
+        ...ty,
+        totalValue,
+        donationCount: donations.length
+      })
+    }
+
+    return taxYearsWithTotals as unknown as TaxYear[]
   } catch (e) {
     console.error("Failed to fetch tax years", e)
     return []
@@ -50,12 +76,16 @@ export default async function DashboardPage() {
             No tax years found. Create one to get started.
           </div>
         ) : (
-          taxYears.map((ty) => (
+          taxYears.map((ty: any) => (
             <Link key={ty.id} href={`/donations/${ty.year}`}>
               <div className="rounded-xl border bg-card text-card-foreground shadow-sm hover:border-primary transition-colors cursor-pointer">
                 <div className="p-6 flex flex-col space-y-2">
-                  <h3 className="text-2xl font-bold tracking-tight">{ty.year}</h3>
+                  <h3 className="text-2xl font-bold tracking-tight">Tax Year {ty.year}</h3>
                   <p className="text-sm text-muted-foreground">Target CPI: {ty.target_cpi}</p>
+                  <div className="pt-2 border-t mt-2">
+                    <p className="text-lg font-semibold text-primary">${ty.totalValue?.toFixed(2) || '0.00'}</p>
+                    <p className="text-xs text-muted-foreground">{ty.donationCount || 0} donation events</p>
+                  </div>
                 </div>
               </div>
             </Link>
