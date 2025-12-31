@@ -115,7 +115,7 @@ async function setupSchema() {
             { name: 'tax_year', type: 'relation', collectionId: taxYearsId, cascadeDelete: false, maxSelect: 1 },
             { name: 'charity', type: 'relation', collectionId: charitiesId, cascadeDelete: false, maxSelect: 1 },
             { name: 'notes', type: 'text' },
-            { name: 'photos', type: 'file', maxSelect: 10, maxSize: 52428800, mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/heic', 'image/heif'] }
+            { name: 'photos', type: 'file', maxSelect: 10, maxSize: 52428800, mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/heic', 'image/heif', 'application/pdf'] }
         ],
         listRule: '', viewRule: '', createRule: '', updateRule: '', deleteRule: ''
     });

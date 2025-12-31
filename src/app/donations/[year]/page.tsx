@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { notFound } from "next/navigation"
 import EditableCPI from "@/components/feature/EditableCPI"
+import { formatCurrency } from "@/lib/utils"
 
 // Force dynamic
 export const dynamic = 'force-dynamic'
@@ -18,7 +19,11 @@ async function getTaxYear(year: string) {
         const yearNum = parseInt(year)
         const record = await pb.collection('tax_years').getFirstListItem(`year=${yearNum}`)
         return record
-    } catch (e) {
+    } catch (e: any) {
+        // Don't log 404s as errors, just return null
+        if (e.status === 404) {
+            return null
+        }
         console.error('Failed to get tax year:', e)
         return null
     }
@@ -84,23 +89,24 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
 
     return (
         <div className="flex-1 space-y-4">
-            <div className="flex items-center space-x-4 mb-6">
-                <Link href="/">
-                    <Button variant="ghost" size="icon">
-                        <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                </Link>
-                <div className="flex-1">
-                    <h2 className="text-3xl font-bold tracking-tight">{year} Donations</h2>
-                    <EditableCPI taxYear={taxYear} />
-                    <p className="text-sm font-medium mt-1">
-                        {totalDonations} {totalDonations === 1 ? 'event' : 'events'} • Total Value: ${totalValue.toFixed(2)}
-                    </p>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                    <Link href="/">
+                        <Button variant="ghost" size="icon">
+                            <ChevronLeft className="h-4 w-4" />
+                        </Button>
+                    </Link>
+                    <div className="flex-1">
+                        <h2 className="text-4xl font-bold tracking-tight">{year} Donations</h2>
+                        <p className="text-xl font-medium mt-2 text-muted-foreground">
+                            {totalDonations} {totalDonations === 1 ? 'event' : 'events'} • Total Value: <span className="text-foreground">{formatCurrency(totalValue)}</span>
+                        </p>
+                    </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full md:w-auto">
                     <PDFDownloadButton year={year} />
                     <Link href={`/donations/${year}/new`}>
-                        <Button>
+                        <Button className="w-full md:w-auto">
                             <Plus className="mr-2 h-4 w-4" />
                             Add Event
                         </Button>
@@ -138,19 +144,19 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
                                 <Card className="hover:border-primary transition-colors cursor-pointer h-full">
                                     <CardHeader className="pb-2">
                                         <div className="flex justify-between items-start">
-                                            <CardTitle className="text-lg font-medium">{d.name}</CardTitle>
-                                            <span className="text-xs font-mono bg-secondary px-2 py-1 rounded">
+                                            <CardTitle className="text-2xl font-bold">{d.name}</CardTitle>
+                                            <span className="text-sm font-mono bg-secondary px-2 py-1 rounded">
                                                 {new Date(d.date).toLocaleDateString()}
                                             </span>
                                         </div>
-                                        <CardDescription className="flex items-center mt-1">
-                                            <Calendar className="mr-1 h-3 w-3" />
+                                        <CardDescription className="flex items-center mt-2 text-base">
+                                            <Calendar className="mr-2 h-4 w-4" />
                                             {d.expand?.charity?.name || "Unknown Charity"}
                                         </CardDescription>
                                     </CardHeader>
                                     <CardContent>
                                         <div className="text-sm font-semibold text-primary">
-                                            ${totalValue.toFixed(2)}
+                                            {formatCurrency(totalValue)}
                                         </div>
                                         <div className="text-xs text-muted-foreground mt-1">
                                             {d.donation_items?.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0) || 0} items

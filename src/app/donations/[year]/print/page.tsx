@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import { getAdminPb } from '@/lib/pocketbase'
+import { formatCurrency } from '@/lib/utils'
 
 // Reuse types or define them here
 type TaxYearData = {
@@ -71,7 +72,7 @@ export default function PrintPage() {
             {/* Summary Grid */}
             <div className="grid grid-cols-3 gap-8 mb-12 bg-gray-50 p-6 rounded-lg">
                 <div className="text-center">
-                    <div className="text-3xl font-bold">${data.totalValue.toFixed(2)}</div>
+                    <div className="text-3xl font-bold">{data.totalValue ? formatCurrency(data.totalValue, false) : '$0.00'}</div>
                     <div className="text-sm text-gray-500 uppercase tracking-wide mt-2">Total Donated</div>
                 </div>
                 <div className="text-center border-l border-gray-200">
@@ -94,7 +95,7 @@ export default function PrintPage() {
                         return (
                             <div key={charity.id} className="flex justify-between text-lg">
                                 <span>{charity.name}</span>
-                                <span className="font-bold font-mono">${charityTotal.toFixed(2)}</span>
+                                <span className="font-bold font-mono">{formatCurrency(charityTotal, false)}</span>
                             </div>
                         )
                     })}
@@ -142,10 +143,29 @@ export default function PrintPage() {
 
                             {/* Photos */}
                             {donation.photos?.length > 0 && (
-                                <div className="flex gap-4 mb-6 overflow-hidden">
-                                    {donation.photos.map((photo: string, idx: number) => (
-                                        <img key={idx} src={photo} className="w-32 h-32 object-cover rounded border border-gray-300" alt="Evidence" />
-                                    ))}
+                                <div className="flex flex-wrap gap-4 mb-6">
+                                    {donation.photos.map((photo: string, idx: number) => {
+                                        const isPdf = photo.startsWith('data:application/pdf');
+                                        if (isPdf) {
+                                            return (
+                                                <div key={idx} className="w-[48%] h-96 border border-gray-300 relative">
+                                                    <object data={photo} type="application/pdf" className="w-full h-full">
+                                                        <div className="flex items-center justify-center h-full bg-gray-50 text-gray-500 p-4 text-center">
+                                                            PDF items are attached but may not display in all print previews.
+                                                        </div>
+                                                    </object>
+                                                </div>
+                                            )
+                                        }
+                                        return (
+                                            <img
+                                                key={idx}
+                                                src={photo}
+                                                className="w-[48%] h-auto object-contain border border-gray-300 rounded"
+                                                alt="Evidence"
+                                            />
+                                        )
+                                    })}
                                 </div>
                             )}
 
@@ -174,8 +194,8 @@ export default function PrintPage() {
                                                 )}
                                             </td>
                                             <td className="py-2 px-2 capitalize text-gray-600">{item.value_mode}</td>
-                                            <td className="py-2 px-2 text-right font-mono">${item.unit_value.toFixed(2)}</td>
-                                            <td className="py-2 px-2 text-right font-bold font-mono">${item.final_value.toFixed(2)}</td>
+                                            <td className="py-2 px-2 text-right font-mono">{formatCurrency(item.unit_value, false)}</td>
+                                            <td className="py-2 px-2 text-right font-bold font-mono">{formatCurrency(item.final_value, false)}</td>
                                         </tr>
                                     ))}
                                     <tr className="bg-gray-50 font-bold border-t-2 border-gray-300">
@@ -183,7 +203,7 @@ export default function PrintPage() {
                                         <td className="py-2 px-2">Total ({donation.items.reduce((s: number, i: any) => s + i.quantity, 0)} items)</td>
                                         <td className="py-2 px-2"></td>
                                         <td className="py-2 px-2"></td>
-                                        <td className="py-2 px-2 text-right">${donation.items.reduce((s: number, i: any) => s + i.final_value, 0).toFixed(2)}</td>
+                                        <td className="py-2 px-2 text-right">{formatCurrency(donation.items.reduce((s: number, i: any) => s + i.final_value, 0), false)}</td>
                                     </tr>
                                 </tbody>
                             </table>

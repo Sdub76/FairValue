@@ -69,3 +69,32 @@ app:
 -   **PocketBase**: Backend, Auth, and Database (SQLite).
 -   **Proxy**: Internal rewrite `/pb` -> `127.0.0.1:8090` ensures the app is network-agnostic.
 -   **Container**: Self-contained image with automated initialization.
+
+## 🎨 Customization (Themes)
+
+FairValue includes a built-in **Light** and **Dark** mode.
+*   **Default**: Follows your system preference.
+*   **Toggle**: Go to `Settings` -> `Appearance` to manually switch themes.
+*   **Design**: The interface is optimized for high contrast and readability in both modes, with a dark navy aesthetic for dark mode and clean slate gray for light mode.
+
+## 📄 Documents & Evidence
+
+FaiValue supports robust evidence tracking for audit defense:
+*   **Photo Uploads**: Standard image formats (JPG, PNG).
+*   **PDF Support**: You can upload PDF invoices or appraisals directly.
+*   **Print Generation**: When you generate an audit report, both images and embedded PDFs are rendered inline, ensuring your physical backup copy is complete.
+
+## 📄 Exporting Records
+
+FairValue includes a robust **Audit Report** generation feature.
+
+1.  Navigate to a specific **Tax Year**.
+2.  Click the **Export PDF** button.
+3.  A printer-friendly version of the report will open in a new tab.
+4.  Your browser's **Print Dialog** will open automatically.
+    *   Select **Save as PDF** as the destination.
+    *   **Tip**: Enable "Background Graphics" in your print settings to see image borders and shading properly.
+
+## 📜 License
+
+Distributed under the MIT License. See `LICENSE` for more information.

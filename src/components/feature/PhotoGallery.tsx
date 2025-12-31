@@ -3,7 +3,9 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Trash2, Upload, Image as ImageIcon, X } from "lucide-react"
+import { Trash2, Upload, Image as ImageIcon, X, FileText } from "lucide-react"
+
+
 import { uploadPhoto, deletePhoto } from "@/app/actions/photos"
 import Image from "next/image"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
@@ -43,20 +45,20 @@ export function PhotoGallery({ donationId, existingPhotos, pocketbaseUrl, collec
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium">Evidence Gallery</h3>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-lg font-medium">Supporting Documentation</h3>
                 <div className="relative">
                     <input
                         type="file"
                         multiple
-                        accept="image/*"
+                        accept="image/*,.pdf"
                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         onChange={handleUpload}
                         disabled={isUploading}
                     />
                     <Button disabled={isUploading} variant="outline" size="sm">
                         <Upload className="mr-2 h-4 w-4" />
-                        {isUploading ? "Uploading..." : "Upload Photos"}
+                        {isUploading ? "Uploading..." : "Upload"}
                     </Button>
                 </div>
             </div>
@@ -65,37 +67,61 @@ export function PhotoGallery({ donationId, existingPhotos, pocketbaseUrl, collec
                 {existingPhotos.length === 0 ? (
                     <div className="col-span-4 border border-dashed rounded-lg p-8 flex flex-col items-center justify-center text-muted-foreground">
                         <ImageIcon className="h-8 w-8 mb-2 opacity-50" />
-                        <span className="text-sm">No photos uploaded</span>
+                        <span className="text-sm">No photos or documents uploaded</span>
                     </div>
                 ) : (
-                    existingPhotos.map((photo) => (
-                        <div
-                            key={photo}
-                            className="relative aspect-square rounded-md overflow-hidden group border bg-muted cursor-pointer"
-                            onClick={() => setSelectedPhoto(photo)}
-                        >
-                            <Image
-                                src={`${pocketbaseUrl}/api/files/${collectionId}/${donationId}/${photo}?thumb=200x200`}
-                                alt="Evidence"
-                                fill
-                                className="object-cover transition-transform hover:scale-105"
-                                unoptimized
-                            />
+                    existingPhotos.map((photo) => {
+                        const isPdf = photo.toLowerCase().endsWith('.pdf')
+                        return (
                             <div
-                                className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex justify-end"
-                                onClick={(e) => e.stopPropagation()}
+                                key={photo}
+                                className="relative aspect-square rounded-md overflow-hidden group border bg-muted cursor-pointer"
+                                onClick={() => isPdf ? window.open(`${pocketbaseUrl}/api/files/${collectionId}/${donationId}/${photo}`, '_blank') : setSelectedPhoto(photo)}
                             >
-                                <Button
-                                    variant="destructive"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    onClick={() => deletePhoto(donationId, photo)}
+                                {isPdf ? (
+                                    <div className="w-full h-full bg-muted overflow-hidden relative group">
+                                        <object
+                                            data={`${pocketbaseUrl}/api/files/${collectionId}/${donationId}/${photo}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
+                                            type="application/pdf"
+                                            className="w-full h-full object-cover pointer-events-none"
+                                            title={photo}
+                                        >
+                                            {/* Fallback if PDF render fails */}
+                                            <div className="w-full h-full flex flex-col items-center justify-center p-2">
+                                                <FileText className="h-10 w-10 text-primary mb-2" />
+                                                <span className="text-[10px] font-medium text-center truncate w-full break-all leading-tight">
+                                                    {photo}
+                                                </span>
+                                            </div>
+                                        </object>
+                                        {/* Overlay to intercept clicks so the gallery logic works instead of interacting with the PDF */}
+                                        <div className="absolute inset-0 z-10 bg-transparent" />
+                                    </div>
+                                ) : (
+                                    <Image
+                                        src={`${pocketbaseUrl}/api/files/${collectionId}/${donationId}/${photo}?thumb=200x200`}
+                                        alt="Evidence"
+                                        fill
+                                        className="object-cover transition-transform hover:scale-105"
+                                        unoptimized
+                                    />
+                                )}
+                                <div
+                                    className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex justify-end z-20"
+                                    onClick={(e) => e.stopPropagation()}
                                 >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                        onClick={() => deletePhoto(donationId, photo)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    ))
+                        )
+                    })
                 )}
             </div>
 

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { revalidatePath } from "next/cache"
 import { PasswordChangeForm } from "@/components/feature/PasswordChangeForm"
+import { ModeToggle } from "@/components/mode-toggle"
 
 // Dynamic because we fetch data
 export const dynamic = 'force-dynamic'
@@ -73,6 +74,20 @@ export default async function SettingsPage() {
                     </CardHeader>
                     <CardContent>
                         <PasswordChangeForm />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Appearance</CardTitle>
+                        <CardDescription>Customize the application theme</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex items-center justify-between">
+                        <div className="flex flex-col space-y-1">
+                            <span>Theme Preference</span>
+                            <span className="text-xs text-muted-foreground">Switch between light and dark mode</span>
+                        </div>
+                        <ModeToggle />
                     </CardContent>
                 </Card>
 
