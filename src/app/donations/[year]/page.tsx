@@ -23,7 +23,19 @@ async function getTaxYear(year: string) {
     }
 }
 
-async function getDonations(taxYearId: string) {
+type DonationWithItems = {
+    id: string
+    name: string
+    date: string
+    expand?: {
+        charity?: { name: string }
+    }
+    donation_items: {
+        final_value: number
+    }[]
+}
+
+async function getDonations(taxYearId: string): Promise<DonationWithItems[]> {
     try {
         const pb = await getAdminPb()
         const records = await pb.collection('donations').getFullList({
@@ -32,7 +44,7 @@ async function getDonations(taxYearId: string) {
         })
 
         // Fetch donation_items sequentially to avoid autocancellation
-        const donationsWithItems = []
+        const donationsWithItems: DonationWithItems[] = []
         for (const donation of records) {
             const items = await pb.collection('donation_items').getFullList({
                 filter: `donation="${donation.id}"`
@@ -40,7 +52,7 @@ async function getDonations(taxYearId: string) {
             donationsWithItems.push({
                 ...donation,
                 donation_items: items
-            })
+            } as unknown as DonationWithItems)
         }
 
         return donationsWithItems
@@ -63,9 +75,9 @@ export default async function TaxYearPage({ params }: { params: Promise<{ year: 
 
     // Calculate summary stats
     const totalDonations = donations.length
-    const totalValue = donations.reduce((sum, d: any) => {
-        const donationTotal = d.donation_items?.reduce((itemSum: number, item: any) =>
-            itemSum + (parseFloat(item.final_value) || 0), 0) || 0
+    const totalValue = donations.reduce((sum, d) => {
+        const donationTotal = d.donation_items?.reduce((itemSum, item) =>
+            itemSum + (item.final_value || 0), 0) || 0
         return sum + donationTotal
     }, 0)
 

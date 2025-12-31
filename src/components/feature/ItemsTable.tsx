@@ -1,19 +1,18 @@
 
 'use client'
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogTabs, DialogTab } from "@/components/ui/dialog" // Wait, simple Dialog and Tabs
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Trash2, Plus, Search } from "lucide-react"
-import { deleteItem, addCustomItem, addDatabaseItem } from "@/app/actions/items"
+import { Textarea } from "@/components/ui/textarea"
+import { Trash2, Plus, Search, Edit2 } from "lucide-react"
+import { deleteItem, addCustomItem, addDatabaseItem, updateItemQuantity, updateItemValue } from "@/app/actions/items"
 import { cn } from "@/lib/utils"
-
-// We need a way to search baseline items. Server action?
-import { searchBaseline } from "@/app/actions/search" // To be created
+import { searchBaseline, getBaselineCategories, getItemsByCategory } from "@/app/actions/search"
 
 type Item = {
     id: string
@@ -22,6 +21,8 @@ type Item = {
     quantity: number
     final_value: number
     value_type: string
+    custom_value?: number
+    value_note?: string
 }
 
 type Props = {
@@ -37,6 +38,50 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
     const [searchResults, setSearchResults] = useState<any[]>([])
     const [isSearching, setIsSearching] = useState(false)
 
+    // Dropdown state
+    const [categories, setCategories] = useState<string[]>([])
+    const [selectedCategory, setSelectedCategory] = useState("")
+    const [categoryItems, setCategoryItems] = useState<any[]>([])
+    const [selectedItem, setSelectedItem] = useState<any>(null)
+
+    // Quality selector
+    const [selectedQuality, setSelectedQuality] = useState<"medium" | "high">("medium")
+
+    // Value edit dialog
+    const [editValueDialogOpen, setEditValueDialogOpen] = useState(false)
+    const [editingItem, setEditingItem] = useState<Item | null>(null)
+
+    // Load categories on mount
+    useEffect(() => {
+        async function loadCategories() {
+            const cats = await getBaselineCategories()
+            setCategories(cats as string[])
+        }
+        loadCategories()
+    }, [])
+
+    // Load items when category changes
+    useEffect(() => {
+        async function loadItems() {
+            if (selectedCategory) {
+                const items = await getItemsByCategory(selectedCategory)
+                setCategoryItems(items)
+            } else {
+                setCategoryItems([])
+            }
+        }
+        loadItems()
+    }, [selectedCategory])
+
+
+    // Calculate inflation factor (2024 Base CPI = 313.689)
+    const inflationFactor = taxYearCpi / 313.689
+
+    // Helper to get displayed value
+    const getInflatedValue = (baselineVal: number) => {
+        return (baselineVal * inflationFactor).toFixed(2)
+    }
+
     // Search Handler
     async function handleSearch(term: string) {
         setSearchTerm(term)
@@ -45,23 +90,30 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
             return
         }
         setIsSearching(true)
-        // Debounce? For MVP just fetch.
         const results = await searchBaseline(term)
         setSearchResults(results)
         setIsSearching(false)
     }
 
-    async function handleAddDatabase(item: any) {
+    async function handleAddDatabase(item: any, quality: "medium" | "high") {
         const formData = new FormData()
-        formData.append("name", item.name)
+        // Append quality to name
+        const qualitySuffix = quality === "high" ? "(Qual: High)" : "(Qual: Med)"
+        formData.append("name", `${item.name} ${qualitySuffix}`)
+
         formData.append("category", item.category)
+        // Use selected quality to determine which baseline value to use
+        const baselineValue = quality === "high" ? item.value_high_2024 : (item.value_low_2024 + item.value_high_2024) / 2
         formData.append("value_low", item.value_low_2024.toString())
-        formData.append("value_high", item.value_high_2024.toString())
-        formData.append("quantity", "1") // Default to 1
+        formData.append("value_high", quality === "high" ? item.value_high_2024.toString() : ((item.value_low_2024 + item.value_high_2024) / 2).toString())
+        formData.append("quantity", "1")
 
         await addDatabaseItem(donationId, taxYearCpi, formData)
         setIsOpen(false)
         setSearchTerm("")
+        setSelectedCategory("")
+        setSelectedItem(null)
+        setSelectedQuality("medium")
     }
 
     async function handleAddCustom(e: React.FormEvent<HTMLFormElement>) {
@@ -69,6 +121,25 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
         const formData = new FormData(e.currentTarget)
         await addCustomItem(donationId, formData)
         setIsOpen(false)
+    }
+
+    async function handleQuantityChange(itemId: string, newQuantity: number) {
+        if (newQuantity > 0) {
+            await updateItemQuantity(itemId, newQuantity)
+        }
+    }
+
+    async function handleValueEdit(e: React.FormEvent<HTMLFormElement>) {
+        e.preventDefault()
+        if (!editingItem) return
+
+        const formData = new FormData(e.currentTarget)
+        const customValue = parseFloat(formData.get("custom_value") as string)
+        const valueNote = formData.get("value_note") as string
+
+        await updateItemValue(editingItem.id, customValue, valueNote)
+        setEditValueDialogOpen(false)
+        setEditingItem(null)
     }
 
     return (
@@ -93,37 +164,125 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
                             </TabsList>
                             <TabsContent value="database" className="space-y-4 pt-4">
                                 <div className="space-y-4">
-                                    <div className="relative">
-                                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            placeholder="Search items (e.g. Sweater, Desk)..."
-                                            className="pl-8"
-                                            value={searchTerm}
-                                            onChange={(e) => handleSearch(e.target.value)}
-                                            autoFocus
-                                        />
+                                    {/* Quality Selector */}
+                                    <div className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+                                        <Label className="text-sm font-medium">Quality:</Label>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                type="button"
+                                                variant={selectedQuality === "medium" ? "default" : "outline"}
+                                                size="sm"
+                                                onClick={() => setSelectedQuality("medium")}
+                                            >
+                                                Medium
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant={selectedQuality === "high" ? "default" : "outline"}
+                                                size="sm"
+                                                onClick={() => setSelectedQuality("high")}
+                                            >
+                                                High
+                                            </Button>
+                                        </div>
                                     </div>
-                                    <div className="max-h-[300px] overflow-y-auto border rounded-md">
-                                        {searchResults.length === 0 && searchTerm.length > 2 ? (
-                                            <div className="p-4 text-center text-sm text-muted-foreground">
-                                                No items found. Try Custom Item.
+
+                                    {/* Search Box */}
+                                    <div>
+                                        <Label className="text-sm mb-2 block">Search by Name</Label>
+                                        <div className="relative">
+                                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                            <Input
+                                                placeholder="Search items (e.g. Sweater, Desk)..."
+                                                className="pl-8"
+                                                value={searchTerm}
+                                                onChange={(e) => handleSearch(e.target.value)}
+                                            />
+                                        </div>
+                                        {searchResults.length > 0 && (
+                                            <div className="mt-2 max-h-[200px] overflow-y-auto border rounded-md">
+                                                {searchResults.map((res) => {
+                                                    const baseline = selectedQuality === "high" ? res.value_high_2024 : (res.value_low_2024 + res.value_high_2024) / 2
+                                                    return (
+                                                        <div
+                                                            key={res.id}
+                                                            className="flex items-center justify-between p-3 hover:bg-accent cursor-pointer border-b last:border-0"
+                                                            onClick={() => handleAddDatabase(res, selectedQuality)}
+                                                        >
+                                                            <div>
+                                                                <div className="font-medium">{res.name}</div>
+                                                                <div className="text-xs text-muted-foreground">{res.category}</div>
+                                                            </div>
+                                                            <div className="text-sm font-mono">
+                                                                ${getInflatedValue(baseline)}
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })}
                                             </div>
-                                        ) : (
-                                            searchResults.map((res) => (
-                                                <div
-                                                    key={res.id}
-                                                    className="flex items-center justify-between p-3 hover:bg-accent cursor-pointer border-b last:border-0"
-                                                    onClick={() => handleAddDatabase(res)}
+                                        )}
+                                    </div>
+
+                                    <div className="relative">
+                                        <div className="absolute inset-0 flex items-center">
+                                            <span className="w-full border-t" />
+                                        </div>
+                                        <div className="relative flex justify-center text-xs uppercase">
+                                            <span className="bg-background px-2 text-muted-foreground">Or browse by category</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Category/Item Dropdown Selectors */}
+                                    <div className="space-y-3">
+                                        <div>
+                                            <Label className="text-sm mb-2 block">Category</Label>
+                                            <select
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                value={selectedCategory}
+                                                onChange={(e) => {
+                                                    setSelectedCategory(e.target.value)
+                                                    setSelectedItem(null)
+                                                }}
+                                            >
+                                                <option value="">Select a category...</option>
+                                                {categories.map((cat) => (
+                                                    <option key={cat} value={cat}>{cat}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {selectedCategory && (
+                                            <div>
+                                                <Label className="text-sm mb-2 block">Item</Label>
+                                                <select
+                                                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                                    value={selectedItem?.id || ""}
+                                                    onChange={(e) => {
+                                                        const item = categoryItems.find(i => i.id === e.target.value)
+                                                        setSelectedItem(item)
+                                                    }}
                                                 >
-                                                    <div>
-                                                        <div className="font-medium">{res.name}</div>
-                                                        <div className="text-xs text-muted-foreground">{res.category}</div>
-                                                    </div>
-                                                    <div className="text-sm font-mono">
-                                                        ${res.value_low_2024} - ${res.value_high_2024}
-                                                    </div>
-                                                </div>
-                                            ))
+                                                    <option value="">Select an item...</option>
+                                                    {categoryItems.map((item: any) => {
+                                                        const baseline = selectedQuality === "high" ? item.value_high_2024 : (item.value_low_2024 + item.value_high_2024) / 2
+                                                        return (
+                                                            <option key={item.id} value={item.id}>
+                                                                {item.name} (${getInflatedValue(baseline)})
+                                                            </option>
+                                                        )
+                                                    })}
+                                                </select>
+                                            </div>
+                                        )}
+
+                                        {selectedItem && (
+                                            <Button
+                                                type="button"
+                                                className="w-full"
+                                                onClick={() => handleAddDatabase(selectedItem, selectedQuality)}
+                                            >
+                                                Add {selectedItem.name}
+                                            </Button>
                                         )}
                                     </div>
                                 </div>
@@ -162,27 +321,64 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
                             <TableHead className="w-[100px]">Qty</TableHead>
                             <TableHead>Item</TableHead>
                             <TableHead>Type</TableHead>
-                            <TableHead className="text-right">Value</TableHead>
+                            <TableHead className="text-right">Unit Value</TableHead>
+                            <TableHead className="text-right">Total Value</TableHead>
                             <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {items.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                                <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
                                     No items added yet.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             items.map((item) => (
                                 <TableRow key={item.id}>
-                                    <TableCell className="font-medium">{item.quantity}</TableCell>
+                                    <TableCell className="font-medium">
+                                        <Input
+                                            type="number"
+                                            min="1"
+                                            defaultValue={item.quantity}
+                                            className="w-16 h-8"
+                                            onBlur={(e) => {
+                                                const newQty = parseInt(e.target.value)
+                                                if (newQty !== item.quantity && newQty > 0) {
+                                                    handleQuantityChange(item.id, newQty)
+                                                }
+                                            }}
+                                        />
+                                    </TableCell>
                                     <TableCell>
                                         <div>{item.name}</div>
                                         <div className="text-xs text-muted-foreground">{item.category}</div>
+                                        {item.value_note && (
+                                            <div className="text-xs text-muted-foreground italic mt-1">
+                                                Note: {item.value_note}
+                                            </div>
+                                        )}
                                     </TableCell>
                                     <TableCell className="text-xs">{item.value_type}</TableCell>
-                                    <TableCell className="text-right font-mono">${item.final_value.toFixed(2)}</TableCell>
+                                    <TableCell className="text-right font-mono text-muted-foreground">
+                                        ${(item.quantity > 0 ? item.final_value / item.quantity : 0).toFixed(2)}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <span className="font-mono">${item.final_value.toFixed(2)}</span>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6"
+                                                onClick={() => {
+                                                    setEditingItem(item)
+                                                    setEditValueDialogOpen(true)
+                                                }}
+                                            >
+                                                <Edit2 className="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    </TableCell>
                                     <TableCell>
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => deleteItem(item.id)}>
                                             <Trash2 className="h-4 w-4" />
@@ -201,6 +397,44 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue }: Props)
                     <span className="text-2xl font-bold font-mono">${totalValue.toFixed(2)}</span>
                 </div>
             </div>
+
+            {/* Value Edit Dialog */}
+            <Dialog open={editValueDialogOpen} onOpenChange={setEditValueDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Item Value</DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleValueEdit} className="space-y-4">
+                        <div>
+                            <Label htmlFor="custom_value">Unit Value ($)</Label>
+                            <Input
+                                id="custom_value"
+                                name="custom_value"
+                                type="number"
+                                step="0.01"
+                                defaultValue={editingItem ? (editingItem.final_value / editingItem.quantity).toFixed(2) : 0}
+                                required
+                            />
+                        </div>
+                        <div>
+                            <Label htmlFor="value_note">Note (Optional)</Label>
+                            <Textarea
+                                id="value_note"
+                                name="value_note"
+                                placeholder="Explain why you adjusted the value..."
+                                defaultValue={editingItem?.value_note || ""}
+                                rows={3}
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <Button type="submit">Save</Button>
+                            <Button type="button" variant="outline" onClick={() => setEditValueDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                        </div>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

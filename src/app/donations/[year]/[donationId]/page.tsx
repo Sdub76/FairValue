@@ -140,23 +140,7 @@ export default async function DonationPage({ params }: { params: Promise<{ year:
                         {/* We need collectionId for the image URL construction */}
                     </div>
 
-                    {/* Summary Card */}
-                    <div className="rounded-xl border bg-muted/40 p-6 space-y-2">
-                        <h3 className="font-medium">Valuation Summary</h3>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Baseline Year</span>
-                            <span>2024 (CPI 313.689)</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-muted-foreground">Tax Year {year}</span>
-                            <span>CPI {taxYearCpi}</span>
-                        </div>
-                        <Separator className="my-2" />
-                        <div className="flex justify-between font-bold text-lg">
-                            <span>Total Value</span>
-                            <span>${totalValue.toFixed(2)}</span>
-                        </div>
-                    </div>
+
                 </div>
             </div>
         </div>

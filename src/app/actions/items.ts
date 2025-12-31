@@ -78,3 +78,46 @@ export async function deleteItem(id: string) {
     }
     revalidatePath("/donations")
 }
+
+export async function updateItemQuantity(itemId: string, quantity: number) {
+    try {
+        const pb = await getAdminPb()
+        const item = await pb.collection('donation_items').getOne(itemId)
+
+        // Recalculate final value based on new quantity
+        const unitValue = parseFloat(item.final_value) / item.quantity
+        const new_final_value = unitValue * quantity
+
+        await pb.collection('donation_items').update(itemId, {
+            quantity,
+            final_value: new_final_value.toFixed(2)
+        })
+    } catch (e) {
+        console.error('Update quantity failed', e)
+        throw new Error('Failed to update quantity')
+    }
+
+    revalidatePath(`/donations`)
+}
+
+export async function updateItemValue(itemId: string, unitValue: number, valueNote?: string) {
+    try {
+        const pb = await getAdminPb()
+        const item = await pb.collection('donation_items').getOne(itemId)
+
+        // Calculate final value based on quantity and new unit value
+        const final_value = unitValue * item.quantity
+
+        await pb.collection('donation_items').update(itemId, {
+            value_type: 'Custom',
+            custom_value: unitValue, // Store the unit value
+            value_note: valueNote || '',
+            final_value: final_value.toFixed(2)
+        })
+    } catch (e) {
+        console.error('Update value failed', e)
+        throw new Error('Failed to update value')
+    }
+
+    revalidatePath(`/donations`)
+}
