@@ -69,3 +69,22 @@ app:
 -   **PocketBase**: Backend, Auth, and Database (SQLite).
 -   **Proxy**: Internal rewrite `/pb` -> `127.0.0.1:8090` ensures the app is network-agnostic.
 -   **Container**: Self-contained image with automated initialization.
+
+## 📄 Exporting Records
+
+FairValue includes a robust **Audit Report** generation feature.
+
+1.  Navigate to a specific **Tax Year**.
+2.  Click the **Export PDF** button.
+3.  A printer-friendly version of the report will open in a new tab.
+4.  Your browser's **Print Dialog** will open automatically.
+    *   Select **Save as PDF** as the destination.
+    *   Ensure \ Background Graphics\ is checked if you want to see image borders and shading.
+
+### Improving Print Aesthetics
+The current print layout is optimized for high-contrast, black-and-white printing to ensure rigorous audit compliance and ink efficiency. However, the print output can be further customized:
+
+*   **Typography:** The print stylesheet (\@media print\) currently uses the system font stack. To create a more formal \Statement\ look, you can import a serif font like *Merriweather* or *Playfair Display* specifically for the print view.
+*   **Watermarks:** A subtle \SUBSTANTIATED\ or \DRAFT\ watermark can be added using fixed-position CSS backgrounds that only appear in print mode.
+*   **Cover Page:** The current cover is functional. A dedicated, full-page cover with a simplified layout (just the total value and year) would add a premium feel.
+*   **Photo Grid:** Currently photos are listed simply. A masonry layout for the photo evidence section would make better use of page space and look more professional.
