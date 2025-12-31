@@ -40,14 +40,20 @@ async function getDonations(charityId: string) {
     }
 }
 
+import { getConfig } from '@/lib/config'
+
+// ... existing imports
+
 export default async function EditCharityPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
     const charity = await getCharity(id)
     const donations = await getDonations(id)
+    const config = getConfig()
+    const radarKey = config.app?.RADAR_KEY
 
     if (!charity) {
         return notFound()
     }
 
-    return <EditCharityForm charity={charity} donations={donations} />
+    return <EditCharityForm charity={charity} donations={donations} apiKey={radarKey} />
 }
