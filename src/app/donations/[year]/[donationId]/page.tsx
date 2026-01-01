@@ -124,7 +124,7 @@ export default async function DonationPage({ params }: { params: Promise<{ year:
                         items={items}
                         totalValue={totalValue}
                         locked={isLocked}
-                        deleteAction={!isLocked && (
+                        deleteAction={!isLocked && items.length === 0 && (
                             <form action={async () => {
                                 'use server'
                                 const { deleteDonationEvent } = await import('@/app/actions/delete')

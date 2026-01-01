@@ -157,6 +157,9 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue, locked, 
         setIsOpen(false)
     }
 
+    // Calculate total quantity
+    const totalQuantity = items.reduce((sum, item) => sum + (item.quantity || 0), 0)
+
     return (
         <div className="space-y-4">
             <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
@@ -451,51 +454,60 @@ export function ItemsTable({ donationId, taxYearCpi, items, totalValue, locked, 
                 </Table>
             </div>
 
-            <div className="flex justify-end p-4 bg-muted/20 rounded-lg">
-                <div className="flex gap-2 items-center">
-                    <span className="text-muted-foreground font-medium text-sm sm:text-base">Total Estimated Value</span>
-                    <span className="text-xl sm:text-2xl font-bold font-mono">{formatCurrency(totalValue)}</span>
-                </div>
-            </div>
 
-            {/* Value Edit Dialog */}
-            <Dialog open={editValueDialogOpen} onOpenChange={setEditValueDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Edit Item Value</DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleValueEdit} className="space-y-4">
-                        <div>
-                            <Label htmlFor="custom_value">Unit Value ($)</Label>
-                            <Input
-                                id="custom_value"
-                                name="custom_value"
-                                type="number"
-                                step="0.01"
-                                defaultValue={editingItem ? (editingItem.final_value / editingItem.quantity).toFixed(2) : 0}
-                                required
-                            />
+                <div className="flex justify-end p-4 bg-muted/20 rounded-lg">
+                    <div className="flex gap-6 items-center">
+                        <div className="flex gap-2 items-center">
+                            <span className="text-muted-foreground font-medium text-sm sm:text-base">Total Items</span>
+                            <span className="text-xl sm:text-2xl font-bold font-mono">{totalQuantity}</span>
                         </div>
-                        <div>
-                            <Label htmlFor="value_note">Valuation Note (Required for IRS)</Label>
-                            <Textarea
-                                id="value_note"
-                                name="value_note"
-                                placeholder="Explain why you adjusted the value..."
-                                defaultValue={editingItem?.value_note || ""}
-                                rows={3}
-                                required
-                            />
+                        <div className="h-8 w-px bg-border" />
+                        <div className="flex gap-2 items-center">
+                            <span className="text-muted-foreground font-medium text-sm sm:text-base">Total Estimated Value</span>
+                            <span className="text-xl sm:text-2xl font-bold font-mono">{formatCurrency(totalValue)}</span>
                         </div>
-                        <div className="flex gap-2">
-                            <Button type="submit">Save</Button>
-                            <Button type="button" variant="outline" onClick={() => setEditValueDialogOpen(false)}>
-                                Cancel
-                            </Button>
-                        </div>
-                    </form>
-                </DialogContent>
-            </Dialog>
-        </div>
-    )
+                    </div>
+                </div>
+                {/* ... */}
+
+                {/* Value Edit Dialog */}
+                <Dialog open={editValueDialogOpen} onOpenChange={setEditValueDialogOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Edit Item Value</DialogTitle>
+                        </DialogHeader>
+                        <form onSubmit={handleValueEdit} className="space-y-4">
+                            <div>
+                                <Label htmlFor="custom_value">Unit Value ($)</Label>
+                                <Input
+                                    id="custom_value"
+                                    name="custom_value"
+                                    type="number"
+                                    step="0.01"
+                                    defaultValue={editingItem ? (editingItem.final_value / editingItem.quantity).toFixed(2) : 0}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <Label htmlFor="value_note">Valuation Note (Required for IRS)</Label>
+                                <Textarea
+                                    id="value_note"
+                                    name="value_note"
+                                    placeholder="Explain why you adjusted the value..."
+                                    defaultValue={editingItem?.value_note || ""}
+                                    rows={3}
+                                    required
+                                />
+                            </div>
+                            <div className="flex gap-2">
+                                <Button type="submit">Save</Button>
+                                <Button type="button" variant="outline" onClick={() => setEditValueDialogOpen(false)}>
+                                    Cancel
+                                </Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+            </div>
+            )
 }
